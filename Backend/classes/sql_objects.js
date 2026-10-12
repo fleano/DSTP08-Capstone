@@ -136,6 +136,8 @@ function checkUserCredentials(req, res, next) {
             //begin jwt
             jwt.sign(obj, publicKey, { algorithm: 'RS256', expiresIn: "1 day" }, function(err, token) {
           //console.log(token);
+          //add token to database
+          Sessions.saveSessionToken(token);
           res.status(200).json({"token": token});
         });
       }
@@ -189,27 +191,105 @@ class AccountPasswordH {
 class Sessions {
     constructor(accountID, sessions) {
         this.accountID = accountID;
-        this.sessions = sessions;
+        this.sessions = sessions; // [token, ...]
     }
     getSessions() {
-        return this.sessions; //JSON session: [{token, expiryDate}, ...]
+        return this.sessions; //JSON session: [{token, ...]
     }
-    static getSessionsByID(accountID) {
-        const sql = `SELECT id, roleID, firstName, lastName FROM Sessions
-            WHERE id = ?`;
-        db.all(sql, [id], (err, rows) => {
+    static getSessionTokensByID(accountID) {
+        const sql = `SELECT sessions FROM Sessions
+            WHERE accountID = ?`;
+        db.all(sql, [accountID], (err, rows) => {
             if (err) {
-                console.log("Error querying database for Account.");
+                console.log("Error querying database for Sessions.");
                 return null;
             }   
             if (rows.length == 0) {
-                console.log("No account exists for this ID.");
+                console.log("No session exists for this ID.");
                 return null;
             }
             const row = rows[0];
-            return Account(row.id, row.roleID, row.firstName, row.lastName);
+            return JSON(row.sessions);
+        });
+    }
+    static saveSessionToken(accountID, token) { //save the token, used with login and authentication for persistence
+        const sql = `SELECT sessions FROM Sessions WHERE accountID = ?`;
+        db.all(sql, [accountID], (err, rows) => {
+            if (err) {
+                console.log("Error querying database for Sessions.");
+                return null;
+            }   
+            if (rows.length == 0) {
+                console.log("No sessions exists at all");
+                return null;
+            }
+            let sessionList = rows.sessions;
+            sessionList.push(token);
+            const sessionsAsString = "[" + sessionList.join(", ") + "]";
+            const sql2 = `UPDATE Sessions
+            SET sessions = ?
+            WHERE accountID = ?`;
+            db.run(sql2, [sessionsAsString, accountID], (err) => {
+                if (err) {
+                    console.log("Error querying database for Sessions.");
+                }
+            })
+        })
+
+    }
+    static expireSessionTokensByID(accountID) { //remove all tokens belonging to that user (purge logins)
+        const sql = `DELETE FROM Sessions WHERE accountID = ?`;
+        db.run(sql, [accountID], (err) => {
+            if (err) {
+                console.log("Error querying database for Sessions.");
+            }
+        })
+    }
+    static pruneSessionToken() { //remove all expired tokens iteratively
+        const sql = `SELECT sessions FROM Sessions`;
+        db.all(sql, [], (err, rows) => {
+            if (err) {
+                console.log("Error querying database for Sessions.");
+                return null;
+            }   
+            if (rows.length == 0) {
+                console.log("No sessions exists at all");
+                return null;
+            }
+            for (let row of rows) { //for each ID's sessions,
+                let sessionListValid = [];
+                let sessionList = JSON(row.sessions); //parse string to list (I hope it works)
+                for (token of sessionList) { //for each token in sessionList
+                    //check token date validity
+                    jwt.verify(token, privateKey, function(err, decoded) {
+                        //console.log(decoded)
+                        if (err.name != "TokenExpiredError") {
+                            sessionListValid.push(token)
+                        }
+                    })
+                }
+                if (sessionListValid.length == 0) { //if no more session tokens, delete that user from Sessions
+                    const sql1 = `DELETE FROM Sessions WHERE accountID = ?`;
+                    db.run(sql1, [row.accountID], (err) => {
+                        if (err) {
+                            console.log("Error querying database for Sessions.");
+                        }
+                    })
+                }
+                else { //update user with remaining sessions
+                    const sessionsAsString = "[" + sessionListValid.join(",") + "]";
+                    const sql2 = `UPDATE Sessions
+                    SET sessions = ?
+                    WHERE accountID = ?`;
+                    db.run(sql2, [sessionsAsString, row.accountID], (err) => {
+                        if (err) {
+                            console.log("Error querying database for Sessions.");
+                        }
+                    })
+                }
+            }
         });
     }
 }
 
-module.exports = {Account, AccountPasswordH, checkUserCredentials, decodeToken, registerUser}
+module.exports = {Account, AccountPasswordH, Sessions, checkUserCredentials, decodeToken, registerUser}
