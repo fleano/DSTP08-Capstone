@@ -212,4 +212,4 @@ class Sessions {
     }
 }
 
-module.exports = {Account, AccountPasswordH, checkUserCredentials, decodeToken}
+module.exports = {Account, AccountPasswordH, checkUserCredentials, decodeToken, registerUser}
