@@ -1,0 +1,44 @@
+Admin: CRUD operations, system settings, superuser
+Manager: staff scheduling, view reports (analytics dashboard), add/delete food items, food comments, changing prices, uploading images
+Staff/server: view schedules and update their availability
+Customer: "no login required, but "login to view history" -> additional feature here. Only read only.
+
+session storage (to login on multiple devices, that has access to the transactions)
+Security feature to revoke all tokens
+
+
+Profile feature: 
+Guest users has no profile management
+Customers will be able to see order history, able to edit their own profile (contact details, names, etc)
+Staff and server, similar to customers, but with access to different things (staff scheduling)
+Manager (should be able to order food, access to scheduling, but cannot change the roles/permissions of the users)
+Admin (allows to change permissions of every roles)
+
+Menu management (Customer, manager, admin)
+Show the food item pictures/ food object
+Name, price, description, picture (additional features: low stock, popular, limited edition)
+Need a DB to store shopping carts for registered users (customer level)
+Tag each food with a category (drinks, set meals, burgers)
+
+Staff scheduling (server, manager, admin)
+
+Analytics features (admin, manager)
+
+
+
+
+Files
+|
+|-----Frontend
+|--------|-----Html and CSS
+|--------|-----React.js
+|--------|
+|-----Pictures (containing food images)
+|-----Backend
+|--------|-----Database.db
+|--------|-----Dockerfile
+|--------|-----Routes
+|--------|-----Authentication
+
+
+
