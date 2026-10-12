@@ -17,9 +17,13 @@ CREATE TABLE Account (
     lastName VARCHAR(100),
     FOREIGN KEY (roleID) REFERENCES Role(id)
 );
+--insert root admin
+-- user: root, password: rootmars
+INSERT INTO Account (username, passwordHash, roleID, firstName, lastName)
+VALUES ("root", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 0, "admin", NULL);
 CREATE TABLE Sessions (
     accountID INTEGER UNIQUE NOT NULL, --accepts either a registered user or a temporary guest user
-    sessions TEXT --stores JSON as - session: {token:, expiryDate:}
+    sessions TEXT --stores JSON as - session: [{token, expiryDate}, ...]
 );
 CREATE TABLE BanReason (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
