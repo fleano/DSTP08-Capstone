@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 
 const { requestLogger } = require('./middleware/logger');
 const { corsMiddleware } = require('./middleware/cors');
@@ -12,6 +13,8 @@ const { analyticsRoutes } = require('./4-analystics-dashboard/analystics-dashboa
 const app = express();
 const port = process.env.PORT || 3000;
 
+const uploadsDirectory = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsDirectory));
 app.use(express.json());
 app.use(requestLogger);
 app.use(corsMiddleware);
