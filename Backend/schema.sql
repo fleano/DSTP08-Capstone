@@ -10,7 +10,7 @@ VALUES ("Admin"), ("Manager"), ("Staff"), ("Customer");
 
 CREATE TABLE Account (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username VARCHAR(50) NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL, --is also email
     passwordHash CHAR(60) NOT NULL,
     FOREIGN KEY (roleID) REFERENCES Role(id),
     firstName VARCHAR(100),
@@ -41,6 +41,7 @@ CREATE TABLE Food (
     description VARCHAR(1000),
     imageLink VARCHAR(200),
     price INTEGER DEFAULT 0 -- stored as cents, so divide by 100 for dollars and cents e.g. 200 is $2.00
+    discountedPrice INTEGER -- if null, display normal price, otherwise display discountedPrice
     FOREIGN KEY (foodCategory) REFERENCES FoodCategory(id) DEFAULT 0,
     enabled BOOLEAN CHECK (done IN (0, 1)) DEFAULT 0, --affects display of item
     available BOOLEAN CHECK (done IN (0, 1)) DEFAULT 0 --affects if item is sold out or not
@@ -50,6 +51,6 @@ CREATE TABLE FoodCart(
     items TEXT --stores as JSON - items: {foodID:, quantity:} --e.g. items: [1,6,18,25]
 );
 
-
-
+CREATE TABLE OrderHistory(
+);
 
