@@ -67,16 +67,16 @@ async function registerController(request, response, next) {
   const email = request.body.email.trim().toLowerCase();
 
   try {
-    // const existingUser = await getQuery(
-    //   "SELECT id FROM Account WHERE username = ? OR email = ?",
-    //   [username, email],
-    // );
+     const existingUser = await getQuery(
+       "SELECT id FROM Account WHERE username = ? OR email = ?",
+       [username, email],
+     );
     console.log(username);
-
+    /*
     const existingUser = await getQuery(
       "SELECT id, username FROM Account WHERE username = ?",
       [username],
-    );
+    );*/
     console.log("existingUser passed");
     console.log(existingUser);
 
@@ -97,8 +97,8 @@ async function registerController(request, response, next) {
     console.log("hasing passed");
 
     const result = await runQuery(
-      "INSERT INTO Account (username, passwordHash) VALUES (?, ?)",
-      [username, passwordHash],
+      "INSERT INTO Account (username, email, passwordHash) VALUES (?, ?, ?)",
+      [username, email, passwordHash],
     );
     // const user = await getQuery(
     //   "SELECT id, username, email, created_at FROM Account WHERE id = ?",
@@ -106,7 +106,7 @@ async function registerController(request, response, next) {
     // );
 
     const user = await getQuery(
-      "SELECT id, username, created_at FROM Account WHERE id = ?",
+      "SELECT id, username FROM Account WHERE id = ?",
       [result.id],
     );
 
