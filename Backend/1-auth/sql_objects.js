@@ -65,10 +65,12 @@ if (!dbExists) {
 class Role { // -1: Guest, 0: Admin, 1: Manager, 2: Staff, 3: Customer
     static tableName = "Role";
     static row1 = "name";
-    constructor(name) {
+    constructor(id, name) {
+        this.id = id
         this.name = name;
     }
-    static insert(name) { 
+    static insert() { 
+        const name = req.body.name
         const sql = `
         INSERT INTO ${tableName} (${row1})
         VALUES (${name});
@@ -114,6 +116,7 @@ class Account { //only contains public data
         this.firstName = firstName;
         this.lastName = lastName;
     }
+    /*
     static getAccountByID(id) {
         id = parseInt(id);
         if (id == NaN) {
@@ -134,7 +137,8 @@ class Account { //only contains public data
             //console.log(rows[0])
             return new Account(row.id, row.roleID, row.firstName, row.lastName);
         });
-    }
+        
+    }*/
     static changeRole(id, roleID) {
         id = parseInt(id);
         if (id == NaN) {
@@ -179,20 +183,27 @@ class Account { //only contains public data
             }
         }
     }
-    static generateGuestAccount() { //generate an account for use in guest applications and return it
+    static generateGuestAccount(req, res, next) { //generate an account for use in guest applications and return it
         const randomUsername = "<Guest>";
         const guestRole = -1;
         const sql = `INSERT INTO Accounts (username, roleID) VALUES (?,?);`;
         db.run(sql, [randomUsername, guestRole]), (err) => {
             if (err) {
                 console.error(err.message);
-                return null;
+                res.status(400).json({ error: 'Could not generate guest account' });
             } else {
-                console.log("Guest account creation success.");
-                return true;
+                
+                const obj = {"id": data.id, "username" : data.username}
+                jwt.sign(obj, publicKey, { algorithm: 'RS256', expiresIn: "1 day" }, function(err, token) {
+                 //add token to database
+                Session.saveToken(data.id, token);
+                res.status(201).json({"token": token}); //send token back to client
+                }
+                )
+
             }
         }
-        return new Account(id, randomUsername, guestRole);
+        next();
     }
     static pruneGuests() { //delete all guest accounts with no valid tokens
         const sql = `DELETE FROM Account 
@@ -260,25 +271,25 @@ function checkUserCredentials(req, res, next) {
       if (comparePassword) { //success
         const obj = {"id": data.id, "username" : data.username}
         //begin jwt
-        jwt.sign(obj, publicKey, { algorithm: 'RS256', expiresIn: "1 day" }, function(err, token) {
+        jwt.sign(obj, privateKey, { algorithm: 'RS256', expiresIn: "1 day" }, function(err, token) {
         //console.log(token);
             //add token to database
             Session.saveToken(data.id, token);
-            res.status(200).json({"token": token});
+            return res.status(201).json({"token": token});
         });
       }
       else { //failed
-        res.status(401).json({"error": "Password does not match."})
+        return res.status(401).json({"error": "Password does not match."})
       }
     })
   });
-  next();
+  //next();
 }
 function decodeToken (req, res, next) { //token validator and decoder middleware
   const incomingToken = req.get('Authorization');
   console.log(incomingToken)
   //check token validity
-  jwt.verify(incomingToken, privateKey, function(err, decoded) {
+  jwt.verify(incomingToken, publicKey, function(err, decoded) {
     //console.log(decoded)
     if (err) {
       res.status(400).json(err) //could be wrong token, expired token...
