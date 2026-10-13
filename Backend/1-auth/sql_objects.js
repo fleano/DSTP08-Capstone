@@ -21,7 +21,7 @@ let db = new sqlite3.Database(path.join(__dirname, 'data', 'database.db'), (err)
         console.log("Connected to 'database.db' database.");
     }
 );
-const initDatabaseScript = fs.readFileSync(path.join(__dirname, "..", 'schema.sql'));
+const initDatabaseScript = fs.readFileSync(path.join(__dirname, "..", 'schema.sql'), {encoding: 'utf8'});
 db.run(initDatabaseScript), (err) => {
     if (err) {
         console.error(err.message);
