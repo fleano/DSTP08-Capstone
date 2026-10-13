@@ -4,6 +4,8 @@ const path = require('path');
 const { requestLogger } = require('./middleware/logger');
 const { corsMiddleware } = require('./middleware/cors');
 
+const {Role, Account, AccountPasswordH, Session, checkUserCredentials, decodeToken, registerUser} = require("./1-auth/sql_objects.js")
+
 const { authRoutes } = require('./1-auth/auth.routes');
 const { menuRoutes } = require('./2-menu-management/menu-management.routes');
 const { schedulingRoutes } = require('./3-staff-scheduling/staff-scheduling.routes');

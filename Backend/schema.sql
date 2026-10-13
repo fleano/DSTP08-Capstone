@@ -1,5 +1,5 @@
-CREATE SCHEMA Restaurant;
-USE Restaurant;
+--CREATE SCHEMA Restaurant;
+--USE Restaurant;
 
 CREATE TABLE Role (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
