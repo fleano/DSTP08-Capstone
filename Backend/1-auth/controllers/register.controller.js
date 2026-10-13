@@ -67,10 +67,10 @@ async function registerController(request, response, next) {
   const email = request.body.email.trim().toLowerCase();
 
   try {
-     const existingUser = await getQuery(
-       "SELECT id FROM Account WHERE username = ? OR email = ?",
-       [username, email],
-     );
+    const existingUser = await getQuery(
+      "SELECT id FROM Account WHERE username = ? OR email = ?",
+      [username, email],
+    );
     console.log(username);
     /*
     const existingUser = await getQuery(
@@ -112,9 +112,7 @@ async function registerController(request, response, next) {
 
     console.log("user passed");
 
-    response
-      .status(201)
-      .json({ user: { ...publicUser(user), created_at: user.created_at } });
+    response.status(201).json({ user: "user created" });
   } catch (error) {
     if (error.code === "SQLITE_CONSTRAINT") {
       response
