@@ -8,9 +8,10 @@ const path = require('path'); //file dir
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key-rs256.pem'));
 const publicKey = fs.readFileSync(path.join(__dirname, 'public-key-rs256.pem'));
 const TOKEN_LIFETIME_DAYS = 1;
-const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
+
 const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
+const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
 let db = new sqlite3.Database(path.join(__dirname, 'data', 'database.db'), (err) => { //connect to database, if not exist create it then connect
