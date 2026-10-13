@@ -1,44 +1,106 @@
 import React, { useState } from 'react';
 import './App.css';
-import Homepage from './homepage.jsx'; // Import the homepage content
+import Homepage from './homepage.jsx'; // Customer view
+import StaffDashboard from './staff/StaffDashboard.jsx'; // Server & Manager view
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('customer'); // 'login', 'customer', 'staff'
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // tracks if the user is loggedIn
+  const [user, setUser] = useState(null);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
+const handleLoginSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    if (!email || !password || (!isLogin && !name)) {
-      setError('Wrong email or password.');
+  if (!email || !password) {
+    setError('Please fill in all fields.');
+    return;
+  }
+
+  try {
+    // Attempt to connect to your backend login API
+    // This is assuming the backend stores the data at the route "/api/login"
+    const response = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name: !isLogin ? name : undefined }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.message || 'Login failed.');
       return;
     }
 
-    // Successfully logged in or registered!
-    setIsLoggedIn(true);
-  };
+    // Successful login here
+    const loggedInUser = {
+      email: data.email,
+      name: data.name,
+      role: data.role, // 'customer', 'server', or 'manager'
+    };
 
-  // If the user is logged in, render the Homepage component instead of the login form
-  if (isLoggedIn) {
-    return <Homepage onLogout={() => {
-      setIsLoggedIn(false);
-      setPassword('');
-    }} />;
+    setUser(loggedInUser);
+    setCurrentView(loggedInUser.role === 'customer' ? 'customer' : 'staff');
+
+  } catch (err) {
+    console.warn('Backend connection failed. Falling back to Guest/Staff mode:', err);
+    
+    // Check if the email indicates a manager or staff member
+    // if the email includes "manager", it will be a staff account
+    const isStaffEmail = email.toLowerCase().includes('manager') || email.toLowerCase().includes('staff');
+
+    const fallbackUser = {
+      email: email || 'guest@restaurant.com',
+      name: name || email.split('@')[0] || 'User',
+      role: isStaffEmail ? 'manager' : 'customer',
+    };
+
+    setUser(fallbackUser);
+    setCurrentView(fallbackUser.role === 'customer' ? 'customer' : 'staff');
+  }
+};
+
+  // 1. If viewing Customer Homepage
+  if (currentView === 'customer') {
+    return (
+      <Homepage
+        user={user}
+        onNavigateToLogin={() => setCurrentView('login')}
+        onLogout={() => { setUser(null); setCurrentView('customer'); }}
+      />
+    );
   }
 
-  // Otherwise, show the Login/Sign Up form
+  // 2. If viewing Staff / Manager Dashboard
+  if (currentView === 'staff') {
+    return (
+      <StaffDashboard
+        user={user}
+        onLogout={() => { setUser(null); setCurrentView('login'); }}
+      />
+    );
+  }
+
+  // 3. Default: Login / Register View
   return (
     <div className="restaurant-auth-container">
       <div className="auth-card">
+        <button 
+          className="back-to-home-btn"
+          onClick={() => setCurrentView('customer')}
+        >
+          ← Continue as Guest / Customer Home
+        </button>
+
         <div className="auth-header">
           <div className="auth-logo-icon">🍜</div>
-          <h1 className="auth-title">Chinese Restaurant</h1>
-          <div className="auth-subtitle">Succulent Chinese Meal Experience</div>
+          <h1 className="auth-title">Restaurant Portal</h1>
+          <div className="auth-subtitle">Customer & Staff Sign In</div>
         </div>
 
         <div className="tab-container">
@@ -60,7 +122,7 @@ export default function App() {
 
         {error && <div className="error-message">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLoginSubmit}>
           {!isLogin && (
             <div className="form-group">
               <label className="form-label">Full Name</label>
@@ -78,14 +140,14 @@ export default function App() {
           )}
 
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">Email Address (Test for staff: use 'manager@rest.com' for staff view)</label>
             <div className="input-wrapper">
               <span className="input-icon">✉️</span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="leexiaoming@gmail.com"
+                placeholder="email@restaurant.com"
                 className="form-input"
               />
             </div>
@@ -109,10 +171,6 @@ export default function App() {
             {isLogin ? 'Sign In' : 'Create Account'}
           </button>
         </form>
-
-        <div className="auth-footer">
-          <p className="footer-note">Made by DSTP08 group X</p>
-        </div>
       </div>
     </div>
   );
