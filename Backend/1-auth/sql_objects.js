@@ -13,12 +13,14 @@ const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 
+const {queryObjects, runQuery, database} = require('./controllers/register.controller');
+const db = database;
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
 
 //check if db exists, if exists, skip inserts
 //todo: create and mount 'data' folder
 const dbExists = fs.existsSync(path.join('data', 'database.db'));
-
+/*
 let db = new sqlite3.Database('./data/database.db', (err) => { //connect to database, if not exist create it then connect
         //console.log(path.join(__dirname, 'data', 'database.db'))
     if (err) {
@@ -28,7 +30,7 @@ let db = new sqlite3.Database('./data/database.db', (err) => { //connect to data
             console.log("Connected to 'database.db' database.");
         }
     }
-);
+);*/
 console.log("db exists", dbExists)
 if (!dbExists) {
     const initDatabaseScript = fs.readFileSync(path.join(__dirname, "..", 'schema.sql'), {encoding: 'utf8'});
@@ -92,22 +94,23 @@ class AccountPasswordH { //contains private data, call this first when creating 
         this.passwordHash = passwordHash;
         this.roleID = roleID;
     }
-    static create(username, password, roleID=3) { //supply username and raw password, default role is Customer
-        let passwordHash
-        bcrypt.hash(password, 10).then( (result) => {
-            passwordHash = result;
-        })
-        const sql = `INSERT INTO Account (username, passwordHash, roleID)
-        SET username = ?, passwordHash = ?, roleID = ?,
-        WHERE id = ?;`;
-        db.run(sql, [username, passwordHash, roleID, this.id]), (err) => {
-            if (err) {
-                return err;
-            } else {
-                return true;
-            }
+    /*
+    static async create(req, res, next) { //supply username and raw password, default role is Customer
+        const username = req.body.username
+        const email = req.body.email
+        const password = req.body.password
+        const roleID = 3
+        const passwordHash = await bcrypt.hash(password, 12);
+        const sql = `INSERT INTO Account (username, email, passwordHash, roleID)
+        VALUES (?,?,?,?);`;
+        const status = await runQuery(sql, [username, email, passwordHash, roleID]);
+        if (status) {
+            return res.status(200);
         }
-    }
+        else {
+            return res.status(400);
+        }
+    }*/
 }
 class Account { //only contains public data
     constructor(id, roleID, firstName, lastName) {
@@ -138,7 +141,7 @@ class Account { //only contains public data
             return new Account(row.id, row.roleID, row.firstName, row.lastName);
         });
         
-    }*/
+    }
     static changeRole(id, roleID) {
         id = parseInt(id);
         if (id == NaN) {
@@ -155,7 +158,7 @@ class Account { //only contains public data
                 return true;
             }
         });
-    }
+    }*/
     /*
     update() {
         const sql = `UPDATE Account
@@ -168,7 +171,7 @@ class Account { //only contains public data
                 console.log("Updated Account success.");
             }
         });
-    }*/
+    }
     static updateName(id, firstName, lastName) {
         const sql = `UPDATE Account
         SET firstName = ?, lastName = ?
@@ -182,7 +185,7 @@ class Account { //only contains public data
                 return true;
             }
         }
-    }
+    }*/
     static generateGuestAccount(req, res, next) { //generate an account for use in guest applications and return it
         const randomUsername = "<Guest>";
         const guestRole = -1;
@@ -312,7 +315,7 @@ class Session { //handles tokens and user sessions
     constructor(accountID, tokens) {
         this.accountID = accountID;
         this.tokens = tokens; // [token, ...]
-    }
+    }/*
     static getSessionByID(accountID) {
         accountID = parseInt(accountID);
         if (accountID == NaN) {
@@ -333,8 +336,8 @@ class Session { //handles tokens and user sessions
             const tokens = transpose(rows);
             return new Session(accountID, tokens);
         });
-    }
-    static saveToken(accountID, token) { //save the token, used with login and authentication for persistence
+    }*/
+    static saveToken(accountID, token) { //save the token, used with login and authentication for persistence //working
         accountID = parseInt(accountID);
         if (accountID == NaN) {
             console.log("Could not expire tokens, accountID specified is invalid.");
