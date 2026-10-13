@@ -116,10 +116,10 @@ async function registerController(request, response, next) {
     // );
 
     console.log("hasing passed");
-
+    const CUSTOMER_ROLE_ID = 3;
     const result = await runQuery(
-      "INSERT INTO Account (username, email, passwordHash) VALUES (?, ?, ?)",
-      [username, email, passwordHash],
+      "INSERT INTO Account (username, email, passwordHash, roleID) VALUES (?, ?, ?, ?)",
+      [username, email, passwordHash, CUSTOMER_ROLE_ID],
     );
     // const user = await getQuery(
     //   "SELECT id, username, email, created_at FROM Account WHERE id = ?",
@@ -146,4 +146,4 @@ async function registerController(request, response, next) {
   }
 }
 
-module.exports = { registerController, queryObjects, runQuery, database};
+module.exports = { registerController, queryObjects, runQuery, database };
