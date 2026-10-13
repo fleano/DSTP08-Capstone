@@ -7,8 +7,8 @@ const path = require('path'); //file dir
 //key files
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key-rs256.pem'));
 const publicKey = fs.readFileSync(path.join(__dirname, 'public-key-rs256.pem'));
-const TOKEN_LIFETIME_DAYS = 1;
 
+const TOKEN_LIFETIME_DAYS = 1;
 const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
@@ -337,13 +337,20 @@ class Session { //handles tokens and user sessions
             return new Session(accountID, tokens);
         });
     }*/
-    static saveToken(accountID, token) { //save the token, used with login and authentication for persistence //working
+    static saveToken(accountID, token, guest=false) { //save the token, used with login and authentication for persistence //working
         accountID = parseInt(accountID);
         if (accountID == NaN) {
             console.log("Could not expire tokens, accountID specified is invalid.");
             return false;
         }
-        const expiry = Date.now() / 1000 + TOKEN_LIFETIME_DAYS * SECONDS_IN_DAY; //epoch seconds + 1 day
+        let tokenLifetime;
+        if (guest) {
+            tokenLifetime = GUEST_TOKEN_LIFETIME; // 3 hours
+        }
+        else {
+            tokenLifetime = TOKEN_LIFETIME_DAYS * SECONDS_IN_DAY; // 1 day
+        }
+        const expiry = Date.now() / 1000 + tokenLifetime //epoch seconds
         const sql = `INSERT INTO Session (accountID, token, expiry) VALUES (?,?,?);`
         db.run(sql, [accountID, token, expiry], (err) => {
             if (err) {
