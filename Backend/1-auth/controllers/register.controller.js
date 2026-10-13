@@ -146,4 +146,4 @@ async function registerController(request, response, next) {
   }
 }
 
-module.exports = { registerController, queryObjects, runQuery, database };
+module.exports = { registerController, getQuery, runQuery, allQuery, database };
