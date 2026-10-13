@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: backend-express-app
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - ./uploads:/app/uploads
+      ## to be confirmed
+      - ./database.db:/app/database.db
+
+    restart: unless-stopped
