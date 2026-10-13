@@ -320,7 +320,7 @@ class Session { //handles tokens and user sessions
                 return null;
             }
             const tokens = transpose(rows);
-            return Session(accountID, tokens);
+            return new Session(accountID, tokens);
         });
     }
     static saveToken(accountID, token) { //save the token, used with login and authentication for persistence
