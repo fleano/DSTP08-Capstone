@@ -1,3 +1,4 @@
+
 /**
  * Login user controller
  * @param {import('express').Request} request Incoming HTTP request.
@@ -17,15 +18,17 @@ async function loginController(request, response, next) {
     const password = request.body?.password;
 
     if (!identifier || typeof password !== 'string' || !password) {
-        response.status(400).json({ error: 'Username or email and password are required' });
+        response.status(400).json({ error: 'Username and password are required' });
         return;
     }
-
+    next(); //pass to checkUserCredentials
+    /*
     try {
         const user = await getQuery(
             'SELECT id, username, email, password, created_at FROM users WHERE username = ? OR email = ?',
             [identifier, identifier.toLowerCase()],
         );
+        
         const passwordMatches = user ? await bcrypt.compare(password, user.password) : false;
 
         if (!user || !passwordMatches) {
@@ -37,6 +40,7 @@ async function loginController(request, response, next) {
     } catch (error) {
         next(error);
     }
+    */
 }
 
 module.exports = { loginController };
