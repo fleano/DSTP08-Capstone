@@ -21,16 +21,17 @@ CREATE TABLE Account (
 -- user: root, password: rootmars
 INSERT INTO Account (username, passwordHash, roleID, firstName, lastName)
 VALUES ("root", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 0, "admin", NULL);
-CREATE TABLE Sessions (
+CREATE TABLE Session (
     accountID INTEGER UNIQUE NOT NULL, --accepts either a registered user or a temporary guest user
-    sessions TEXT --stores JSON as - session: [{token, expiryDate}, ...]
+    token TEXT NOT NULL.
+    expiry INTEGER NOT NULL --unix epoch
 );
 CREATE TABLE BanReason (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     accountID INTEGER,
     reason VARCHAR(300),
     eventDate INTEGER NOT NULL, --unix epoch
-    expiryDate INTEGER --unix epoch
+    expiry INTEGER --unix epoch
     FOREIGN KEY (accountID) REFERENCES Account(id)
 );
 
