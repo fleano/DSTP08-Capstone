@@ -8,6 +8,7 @@ const path = require('path'); //file dir
 const privateKey = fs.readFileSync('./private-key-rs256.pem');
 const publicKey = fs.readFileSync('./public-key-rs256.pem');
 const TOKEN_LIFETIME_DAYS = 1;
+const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 
@@ -19,7 +20,7 @@ let db = new sqlite3.Database(path.join(__dirname, 'database.db'), (err) => { //
         console.log("Connected to 'database.db' database.");
     }
 );
-class Role { // 0: Admin, 1: Manager, 2: Staff, 3: Customer
+class Role { // -1: Guest, 0: Admin, 1: Manager, 2: Staff, 3: Customer
     static tableName = "Role";
     static row1 = "name";
     constructor(name) {
@@ -148,6 +149,36 @@ class Account { //only contains public data
             }
         }
     }
+    static generateRandomAccount() { //generate an account for use in guest applications and return it
+        const randomUsername = "<Guest>";
+        const guestRole = -1;
+        const sql = `INSERT INTO Accounts (username, roleID) VALUES (?,?);`;
+        db.run(sql, [randomUsername, guestRole]), (err) => {
+            if (err) {
+                console.error(err.message);
+                return null;
+            } else {
+                console.log("Guest account creation success.");
+                return true;
+            }
+        }
+        return Account(id, randomUsername, guestRole);
+    }
+    static pruneGuests() { //delete all guest accounts with no valid tokens
+        const sql = `DELETE FROM Account 
+        WHERE (Account.roleID = ? AND Session.token = NULL)
+        LEFT JOIN Session ON Account.id = Session.accountID;`;
+        //delete all guests in guestList without tokens
+        db.run(sql, [-1]), (err) => {
+            if (err) {
+                console.error(err.message);
+                return null;
+            } else {
+                console.log("Guest account creation success.");
+                return true;
+            }
+        }
+    }
 }
 //account creator helper
 function registerUser(req, res, next) {
@@ -179,7 +210,7 @@ function registerUser(req, res, next) {
     next();
 }
 function checkUserCredentials(req, res, next) {
-  const sql = `SELECT id, username, passwordHash FROM Accounts
+  const sql = `SELECT id, username, passwordHash FROM Account
   WHERE username = ?;`
   db.all(sql, [req.body.username], (err, rows) => {
     if (err) {
@@ -201,9 +232,9 @@ function checkUserCredentials(req, res, next) {
         //begin jwt
         jwt.sign(obj, publicKey, { algorithm: 'RS256', expiresIn: "1 day" }, function(err, token) {
         //console.log(token);
-        //add token to database
-        Sessions.saveSessionToken(token);
-        res.status(200).json({"token": token});
+            //add token to database
+            Session.saveSessionToken(token);
+            res.status(200).json({"token": token});
         });
       }
       else { //failed
@@ -228,8 +259,6 @@ function decodeToken (req, res, next) { //token validator and decoder middleware
     }
   })
   next();
-  //
-  
 }
 function transpose(array) { //transposes vertical to horizontal (array of arrays, into a single array). Only works on single column
     let result = [];
@@ -273,6 +302,14 @@ class Session { //handles tokens and user sessions
         const expiry = Date.now() / 1000 + TOKEN_LIFETIME_DAYS * SECONDS_IN_DAY; //epoch seconds + 1 day
         const sql = `INSERT INTO Session (accountID, token, expiry) VALUES (?,?,?);`
         db.run(sql, [accountID, token, expiry], (err) => {
+            if (err) {
+                console.log("Error querying database for Session.");
+            }
+        })
+    }
+    static deleteToken(token) { //delete a specific token
+        const sql = `DELETE FROM Session WHERE token = ?`
+        db.run(sql, [token], (err) => {
             if (err) {
                 console.log("Error querying database for Session.");
             }
