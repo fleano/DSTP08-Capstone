@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken') // jsonwebtoken
 const fs = require('fs'); //filesystem
 const path = require('path'); //file dir
 //key files
-const privateKey = fs.readFileSync('./private-key-rs256.pem');
-const publicKey = fs.readFileSync('./public-key-rs256.pem');
+const privateKey = fs.readFileSync(path.join(__dirname, 'private-key-rs256.pem'));
+const publicKey = fs.readFileSync(path.join(__dirname, 'public-key-rs256.pem'));
 const TOKEN_LIFETIME_DAYS = 1;
 const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 const SECONDS_IN_HOUR = 3600;
