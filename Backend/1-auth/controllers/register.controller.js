@@ -94,7 +94,7 @@ async function registerController(request, response, next) {
     //   [username, email, passwordHash],
     // );
 
-    cosole.log("hasing passed");
+    console.log("hasing passed");
 
     const result = await runQuery(
       "INSERT INTO Account (username, passwordHash) VALUES (?, ?)",
@@ -110,7 +110,7 @@ async function registerController(request, response, next) {
       [result.id],
     );
 
-    cosole.log("user passed");
+    console.log("user passed");
 
     response
       .status(201)
