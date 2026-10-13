@@ -7,6 +7,9 @@ const path = require('path'); //file dir
 //key files
 const privateKey = fs.readFileSync('./private-key-rs256.pem');
 const publicKey = fs.readFileSync('./public-key-rs256.pem');
+const TOKEN_LIFETIME_DAYS = 1;
+const SECONDS_IN_HOUR = 3600;
+const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
 let db = new sqlite3.Database(path.join(__dirname, 'database.db'), (err) => { //connect to database, if not exist create it then connect
@@ -51,7 +54,7 @@ class AccountPasswordH { //contains private data, call this first when creating 
         })
         const sql = `INSERT INTO Account (username, passwordHash, roleID)
         SET username = ?, passwordHash = ?, roleID = ?,
-        WHERE id = ?`;
+        WHERE id = ?;`;
         db.run(sql, [username, passwordHash, roleID, this.id]), (err) => {
             if (err) {
                 return err;
@@ -75,7 +78,7 @@ class Account { //only contains public data
             return null;
         }
         const sql = `SELECT id, roleID, firstName, lastName FROM Account
-            WHERE id = ?`;
+            WHERE id = ?;`;
         db.all(sql, [id], (err, rows) => {
             if (err) {
                 console.log("Error querying database for Account.");
@@ -107,7 +110,7 @@ class Account { //only contains public data
                 return null;
             }
         });
-        const sql1 = `UPDATE Account roleID = ? WHERE id = ?`;
+        const sql1 = `UPDATE Account roleID = ? WHERE id = ?;`;
         db.run(sql1, [roleID, id], (err) => {
             if (err) {
                 console.log("Error querying database for Account.");
@@ -134,7 +137,7 @@ class Account { //only contains public data
     static updateName(id, firstName, lastName) {
         const sql = `UPDATE Account
         SET firstName = ?, lastName = ?
-        WHERE id = ?`;
+        WHERE id = ?;`;
         db.run(sql, [firstName, lastName, id],), (err) => {
             if (err) {
                 console.error(err.message);
@@ -177,7 +180,7 @@ function registerUser(req, res, next) {
 }
 function checkUserCredentials(req, res, next) {
   const sql = `SELECT id, username, passwordHash FROM Accounts
-  WHERE username = ?`
+  WHERE username = ?;`
   db.all(sql, [req.body.username], (err, rows) => {
     if (err) {
       res.status(400).json({"error":err.message});
@@ -228,107 +231,74 @@ function decodeToken (req, res, next) { //token validator and decoder middleware
   //
   
 }
-class Sessions { //handles tokens and user sessions
-    constructor(accountID, sessions) {
+function transpose(array) { //transposes vertical to horizontal (array of arrays, into a single array). Only works on single column
+    let result = [];
+    for (let elem of array) {
+        result.push(elem[0]);
+    }
+    return result;
+}
+class Session { //handles tokens and user sessions
+    constructor(accountID, tokens) {
         this.accountID = accountID;
-        this.sessions = sessions; // [token, ...]
+        this.tokens = tokens; // [token, ...]
     }
-    getSessions() {
-        return this.sessions; //JSON session: [{token, ...]
-    }
-    static getSessionTokensByID(accountID) {
-        const sql = `SELECT sessions FROM Sessions
-            WHERE accountID = ?`;
+    static getSessionByID(accountID) {
+        accountID = parseInt(accountID);
+        if (accountID == NaN) {
+            console.log("Could not expire tokens, accountID specified is invalid.");
+            return false;
+        }
+        const sql = `SELECT token FROM Session
+            WHERE accountID = ?;`;
         db.all(sql, [accountID], (err, rows) => {
             if (err) {
-                console.log("Error querying database for Sessions.");
+                console.log("Error querying database for Session.");
                 return null;
             }   
             if (rows.length == 0) {
-                console.log("No session exists for this ID.");
+                console.log("No session tokens exist for this ID.");
                 return null;
             }
-            const row = rows[0];
-            return JSON(row.sessions);
+            const tokens = transpose(rows);
+            return Session(accountID, tokens);
         });
     }
-    static saveSessionToken(accountID, token) { //save the token, used with login and authentication for persistence
-        const sql = `SELECT sessions FROM Sessions WHERE accountID = ?`;
-        db.all(sql, [accountID], (err, rows) => {
+    static saveToken(accountID, token) { //save the token, used with login and authentication for persistence
+        accountID = parseInt(accountID);
+        if (accountID == NaN) {
+            console.log("Could not expire tokens, accountID specified is invalid.");
+            return false;
+        }
+        const expiry = Date.now() / 1000 + TOKEN_LIFETIME_DAYS * SECONDS_IN_DAY; //epoch seconds + 1 day
+        const sql = `INSERT INTO Session (accountID, token, expiry) VALUES (?,?,?);`
+        db.run(sql, [accountID, token, expiry], (err) => {
             if (err) {
-                console.log("Error querying database for Sessions.");
-                return null;
-            }   
-            if (rows.length == 0) {
-                console.log("No sessions exists at all");
-                return null;
+                console.log("Error querying database for Session.");
             }
-            let sessionList = rows.sessions;
-            sessionList.push(token);
-            const sessionsAsString = "[" + sessionList.join(", ") + "]";
-            const sql2 = `UPDATE Sessions
-            SET sessions = ?
-            WHERE accountID = ?`;
-            db.run(sql2, [sessionsAsString, accountID], (err) => {
-                if (err) {
-                    console.log("Error querying database for Sessions.");
-                }
-            })
         })
-
     }
-    static expireSessionTokensByID(accountID) { //remove all tokens belonging to that user (purge logins)
-        const sql = `DELETE FROM Sessions WHERE accountID = ?`;
+    static expireTokensByID(accountID) { //remove all tokens belonging to that user (purge logins)
+        accountID = parseInt(accountID);
+        if (accountID == NaN) {
+            console.log("Could not expire tokens, accountID specified is invalid.");
+            return false;
+        }
+        const sql = `DELETE FROM Session WHERE accountID = ?;`;
         db.run(sql, [accountID], (err) => {
             if (err) {
-                console.log("Error querying database for Sessions.");
+                console.log("Error querying database for Session.");
             }
         })
     }
-    static pruneSessionToken() { //remove all expired tokens iteratively
-        const sql = `SELECT sessions FROM Sessions`;
-        db.all(sql, [], (err, rows) => {
+    static pruneTokens() { //remove all expired tokens
+        const sql = `DELETE FROM Session WHERE expiry <= ?;`
+        const epochSecondsNow = Date.now() / 1000 //epoch seconds NOW
+        db.run(sql, [], (err) => {
             if (err) {
-                console.log("Error querying database for Sessions.");
-                return null;
-            }   
-            if (rows.length == 0) {
-                console.log("No sessions exists at all");
-                return null;
+                console.log("Error querying database for Session.");
             }
-            for (let row of rows) { //for each ID's sessions,
-                let sessionListValid = [];
-                let sessionList = JSON(row.sessions); //parse string to list (I hope it works)
-                for (token of sessionList) { //for each token in sessionList
-                    //check token date validity
-                    jwt.verify(token, privateKey, function(err, decoded) {
-                        //console.log(decoded)
-                        if (err.name != "TokenExpiredError") {
-                            sessionListValid.push(token)
-                        }
-                    })
-                }
-                if (sessionListValid.length == 0) { //if no more session tokens, delete that user from Sessions
-                    const sql1 = `DELETE FROM Sessions WHERE accountID = ?`;
-                    db.run(sql1, [row.accountID], (err) => {
-                        if (err) {
-                            console.log("Error querying database for Sessions.");
-                        }
-                    })
-                }
-                else { //update user with remaining sessions
-                    const sessionsAsString = "[" + sessionListValid.join(",") + "]";
-                    const sql2 = `UPDATE Sessions
-                    SET sessions = ?
-                    WHERE accountID = ?`;
-                    db.run(sql2, [sessionsAsString, row.accountID], (err) => {
-                        if (err) {
-                            console.log("Error querying database for Sessions.");
-                        }
-                    })
-                }
-            }
-        });
+        })
     }
 }
 
