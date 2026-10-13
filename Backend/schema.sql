@@ -6,7 +6,7 @@ CREATE TABLE Role (
     name VARCHAR(50)
 );
 INSERT INTO Role (name)
-VALUES ("Admin"), ("Manager"), ("Staff"), ("Customer");
+VALUES ("Admin"), ("Manager"), ("Staff"), ("Customer"), (-1, "Guest");
 
 CREATE TABLE Account (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
