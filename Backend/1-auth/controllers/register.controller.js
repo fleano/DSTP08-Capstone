@@ -8,6 +8,26 @@ const databasePath =
 const database = new sqlite3.Database(databasePath);
 
 /**
+ * Retrieves all matching SQLite rows.
+ *
+ * @param {string} query Parameterized SQL statement.
+ * @param {unknown[]} parameters Values for the SQL placeholders.
+ * @returns {Promise<object[]>} Matching rows.
+ */
+function allQuery(query, parameters = []) {
+  return new Promise((resolve, reject) => {
+    database.all(query, parameters, (error, rows) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve(rows);
+    });
+  });
+}
+
+/**
  * Retrieves one SQLite row.
  *
  * @param {string} query Parameterized SQL statement.
