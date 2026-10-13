@@ -14,6 +14,11 @@ const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
+
+//check if db exists, if exists, skip inserts
+//todo: create and mount 'data' folder
+const dbExists = fs.existsSync(path.join('data', 'database.db'));
+
 let db = new sqlite3.Database('./data/database.db', (err) => { //connect to database, if not exist create it then connect
         //console.log(path.join(__dirname, 'data', 'database.db'))
     if (err) {
@@ -24,15 +29,38 @@ let db = new sqlite3.Database('./data/database.db', (err) => { //connect to data
         }
     }
 );
-const initDatabaseScript = fs.readFileSync(path.join(__dirname, "..", 'schema.sql'), {encoding: 'utf8'});
-db.run(initDatabaseScript), (err) => {
-    if (err) {
-        console.error(err.message);
-        return null;
-    } else {
-        console.log("Inserted ${this.name} role success.");
-        return true;
+console.log("db exists", dbExists)
+if (!dbExists) {
+    const initDatabaseScript = fs.readFileSync(path.join(__dirname, "..", 'schema.sql'), {encoding: 'utf8'});
+    try {
+        db.exec(initDatabaseScript), (err) => { //use exec to read multiple lines
+            if (err) {
+                console.log("insert table script")
+                console.error(err.message);
+                db.close()
+            } else {
+                console.log("Database init success");
+            }
+        }
     }
+    catch {
+    }
+    const insertScript = fs.readFileSync(path.join(__dirname, "..", 'schema_insert.sql'), {encoding: 'utf8'});
+    try {
+        db.exec(insertScript), (err) => { //use exec to read multiple lines
+            if (err) {
+                console.error(err.message);
+                console.log("insert data script")
+                db.close()
+            } else {
+                console.log("Database init success");
+            }
+        }
+    }
+    catch {
+
+    }
+
 }
 class Role { // -1: Guest, 0: Admin, 1: Manager, 2: Staff, 3: Customer
     static tableName = "Role";
@@ -92,11 +120,10 @@ class Account { //only contains public data
             console.log("Invalid ID provided for account.");
             return null;
         }
-        const sql = `SELECT id, roleID, firstName, lastName FROM Account
-            WHERE id = ?;`;
+        const sql = `SELECT id, roleID, firstName, lastName FROM Account WHERE id = ?;`;
         db.all(sql, [id], (err, rows) => {
             if (err) {
-                console.log("Error querying database for Account.");
+                console.log(err);
                 return null;
             }   
             if (rows.length == 0) {
@@ -104,7 +131,8 @@ class Account { //only contains public data
                 return null;
             }
             const row = rows[0];
-            return Account(row.id, row.roleID, row.firstName, row.lastName);
+            //console.log(rows[0])
+            return new Account(row.id, row.roleID, row.firstName, row.lastName);
         });
     }
     static changeRole(id, roleID) {
@@ -113,18 +141,6 @@ class Account { //only contains public data
             console.log("Invalid ID provided for account.");
             return null;
         }
-        const sql = `SELECT id FROM Account
-            WHERE id = ?`;
-        db.all(sql, [id], (err, rows) => {
-            if (err) {
-                console.log("Error querying database for Account.");
-                return null;
-            }   
-            if (rows.length == 0) {
-                console.log("No account exists for this ID.");
-                return null;
-            }
-        });
         const sql1 = `UPDATE Account roleID = ? WHERE id = ?;`;
         db.run(sql1, [roleID, id], (err) => {
             if (err) {
@@ -163,7 +179,7 @@ class Account { //only contains public data
             }
         }
     }
-    static generateRandomAccount() { //generate an account for use in guest applications and return it
+    static generateGuestAccount() { //generate an account for use in guest applications and return it
         const randomUsername = "<Guest>";
         const guestRole = -1;
         const sql = `INSERT INTO Accounts (username, roleID) VALUES (?,?);`;
@@ -176,7 +192,7 @@ class Account { //only contains public data
                 return true;
             }
         }
-        return Account(id, randomUsername, guestRole);
+        return new Account(id, randomUsername, guestRole);
     }
     static pruneGuests() { //delete all guest accounts with no valid tokens
         const sql = `DELETE FROM Account 
