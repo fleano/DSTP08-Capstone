@@ -86,7 +86,7 @@ async function registerController(request, response, next) {
         .json({ error: "Username or email is already registered" });
       return;
     }
-    cosole.log("exitng passed");
+    console.log("exitng passed");
 
     const passwordHash = await bcrypt.hash(request.body.password, 12);
     // const result = await runQuery(
