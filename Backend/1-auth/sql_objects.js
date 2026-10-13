@@ -331,7 +331,7 @@ class Session { //handles tokens and user sessions
     static pruneTokens() { //remove all expired tokens
         const sql = `DELETE FROM Session WHERE expiry <= ?;`
         const epochSecondsNow = Date.now() / 1000 //epoch seconds NOW
-        db.run(sql, [], (err) => {
+        db.run(sql, [epochSecondsNow], (err) => {
             if (err) {
                 console.log("Error querying database for Session.");
             }
