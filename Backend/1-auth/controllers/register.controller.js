@@ -1,6 +1,7 @@
 const sqlite3 = require("sqlite3");
 const path = require("path");
 const bcrypt = require("bcrypt");
+const { queryObjects } = require("v8");
 
 const databasePath =
   process.env.DATABASE_PATH ||
@@ -125,4 +126,4 @@ async function registerController(request, response, next) {
   }
 }
 
-module.exports = { registerController };
+module.exports = { registerController, queryObjects, runQuery, database};

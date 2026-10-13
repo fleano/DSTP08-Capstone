@@ -6,8 +6,8 @@ const {checkUserCredentials} = require("./sql_objects.js")
 
 const router = Router();
 
-
 router.post('/register', registerController);
+//router.post('/register', AccountPasswordH.create);
 router.post('/login', loginController, checkUserCredentials);
 
 module.exports = { authRoutes: router };
