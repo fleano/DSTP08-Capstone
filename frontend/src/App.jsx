@@ -24,7 +24,7 @@ const handleLoginSubmit = async (e) => {
   try {
     // Attempt to connect to your backend login API
     // This is assuming the backend stores the data at the route "/api/login"
-    const response = await fetch('http://localhost:5000/api/login', {
+    const response = await fetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name: !isLogin ? name : undefined }),
