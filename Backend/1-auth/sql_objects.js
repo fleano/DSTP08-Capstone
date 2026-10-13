@@ -315,7 +315,7 @@ class Session { //handles tokens and user sessions
     constructor(accountID, tokens) {
         this.accountID = accountID;
         this.tokens = tokens; // [token, ...]
-    }
+    }/*
     static getSessionByID(accountID) {
         accountID = parseInt(accountID);
         if (accountID == NaN) {
@@ -336,7 +336,7 @@ class Session { //handles tokens and user sessions
             const tokens = transpose(rows);
             return new Session(accountID, tokens);
         });
-    }
+    }*/
     static saveToken(accountID, token) { //save the token, used with login and authentication for persistence //working
         accountID = parseInt(accountID);
         if (accountID == NaN) {
