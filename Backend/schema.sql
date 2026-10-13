@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS Role (
 );
 CREATE TABLE IF NOT EXISTS Account (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username VARCHAR(100) UNIQUE NOT NULL, --is also email
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(200) UNIQUE NOT NULL,
     passwordHash CHAR(60) NOT NULL,
     roleID INTEGER,
     firstName VARCHAR(100),
