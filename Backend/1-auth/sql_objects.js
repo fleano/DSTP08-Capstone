@@ -5,21 +5,35 @@ const jwt = require('jsonwebtoken') // jsonwebtoken
 const fs = require('fs'); //filesystem
 const path = require('path'); //file dir
 //key files
-const privateKey = fs.readFileSync('./private-key-rs256.pem');
-const publicKey = fs.readFileSync('./public-key-rs256.pem');
+const privateKey = fs.readFileSync(path.join(__dirname, 'private-key-rs256.pem'));
+const publicKey = fs.readFileSync(path.join(__dirname, 'public-key-rs256.pem'));
 const TOKEN_LIFETIME_DAYS = 1;
-const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
+
 const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
+const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
-let db = new sqlite3.Database(path.join(__dirname, 'database.db'), (err) => { //connect to database, if not exist create it then connect
-        if (err) {
+let db = new sqlite3.Database('./data/database.db', (err) => { //connect to database, if not exist create it then connect
+        //console.log(path.join(__dirname, 'data', 'database.db'))
+    if (err) {
             console.error(err.message);
         }
-        console.log("Connected to 'database.db' database.");
+        else {        
+            console.log("Connected to 'database.db' database.");
+        }
     }
 );
+const initDatabaseScript = fs.readFileSync(path.join(__dirname, "..", 'schema.sql'), {encoding: 'utf8'});
+db.run(initDatabaseScript), (err) => {
+    if (err) {
+        console.error(err.message);
+        return null;
+    } else {
+        console.log("Inserted ${this.name} role success.");
+        return true;
+    }
+}
 class Role { // -1: Guest, 0: Admin, 1: Manager, 2: Staff, 3: Customer
     static tableName = "Role";
     static row1 = "name";
@@ -331,7 +345,7 @@ class Session { //handles tokens and user sessions
     static pruneTokens() { //remove all expired tokens
         const sql = `DELETE FROM Session WHERE expiry <= ?;`
         const epochSecondsNow = Date.now() / 1000 //epoch seconds NOW
-        db.run(sql, [], (err) => {
+        db.run(sql, [epochSecondsNow], (err) => {
             if (err) {
                 console.log("Error querying database for Session.");
             }
@@ -339,4 +353,4 @@ class Session { //handles tokens and user sessions
     }
 }
 
-module.exports = {Account, AccountPasswordH, Sessions, checkUserCredentials, decodeToken, registerUser}
+module.exports = {Role, Account, AccountPasswordH, Session, checkUserCredentials, decodeToken, registerUser}
