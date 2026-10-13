@@ -13,13 +13,23 @@ const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
-let db = new sqlite3.Database(path.join(__dirname, 'database.db'), (err) => { //connect to database, if not exist create it then connect
+let db = new sqlite3.Database(path.join(__dirname, 'data', 'database.db'), (err) => { //connect to database, if not exist create it then connect
         if (err) {
             console.error(err.message);
         }
         console.log("Connected to 'database.db' database.");
     }
 );
+const initDatabaseScript = fs.readFileSync(path.join(__dirname, 'schema.sql'));
+db.run(initDatabaseScript), (err) => {
+    if (err) {
+        console.error(err.message);
+        return null;
+    } else {
+        console.log("Inserted ${this.name} role success.");
+        return true;
+    }
+}
 class Role { // -1: Guest, 0: Admin, 1: Manager, 2: Staff, 3: Customer
     static tableName = "Role";
     static row1 = "name";
@@ -339,4 +349,4 @@ class Session { //handles tokens and user sessions
     }
 }
 
-module.exports = {Account, AccountPasswordH, Sessions, checkUserCredentials, decodeToken, registerUser}
+module.exports = {Role, Account, AccountPasswordH, Session, checkUserCredentials, decodeToken, registerUser}
