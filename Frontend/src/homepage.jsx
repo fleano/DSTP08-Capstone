@@ -10,7 +10,7 @@ export default function Homepage({ onNavigateToLogin, user, onLogout }) {
     async function fetchMenu() {
       try {
         // REPLACE URL WITH THE BACKEND API
-        const response = await fetch('http://localhost:5000/api/menu'); 
+        const response = await fetch('/api/menu'); 
         
         if (response.ok) {
           const data = await response.json();

@@ -16,10 +16,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const uploadsDirectory = path.join(__dirname, 'uploads');
+app.use(corsMiddleware);
 app.use('/uploads', express.static(uploadsDirectory));
 app.use(express.json());
 app.use(requestLogger);
-app.use(corsMiddleware);
+
 
 app.use('/auth', authRoutes);
 app.use('/menu', menuRoutes);
@@ -35,4 +36,4 @@ app.get('/health', (req, res) => {
 });
 
 
-app.listen(port, () => { console.log(`Server running at http://localhost:${port}/`); });
+app.listen(port, '0.0.0.0', () => { console.log(`Server running at http://localhost:${port}/`); });
