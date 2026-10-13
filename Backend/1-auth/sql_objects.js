@@ -283,7 +283,7 @@ function checkUserCredentials(req, res, next) {
       }
     })
   });
-  //next();
+  //next(); //do not next
 }
 function decodeToken (req, res, next) { //token validator and decoder middleware
   const incomingToken = req.get('Authorization');
