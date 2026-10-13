@@ -233,7 +233,7 @@ function checkUserCredentials(req, res, next) {
         jwt.sign(obj, publicKey, { algorithm: 'RS256', expiresIn: "1 day" }, function(err, token) {
         //console.log(token);
             //add token to database
-            Session.saveSessionToken(token);
+            Session.saveToken(data.id, token);
             res.status(200).json({"token": token});
         });
       }
