@@ -1,8 +1,8 @@
 const { Router } = require("express");
 
-const { uploadFileEnd, addFoodMiddleware } = require("./controllers/uploadFile.controller");
+const { uploadFileEnd, addFoodMiddleware, editFoodMiddleware } = require("./controllers/uploadFile.controller");
 const { upload } = require("./middleware");
-const { decodeToken } = require("../1-auth/sql_objects")
+const { decodeToken, Session } = require("../1-auth/sql_objects")
 const {Food, FoodCategory, FoodCart} = require("./food_objects")
 
 const router = Router();
@@ -26,5 +26,6 @@ router.post("/checkout", FoodCart.checkout, FoodCart.clearCart);
 
 // TODO: Add authentication middleware to protect this route
 //decodeToken is authentication middleware
-router.post("/upload", decodeToken, upload.single("file"), addFoodMiddleware, uploadFileEnd);
+router.post("/upload", Session.adminPrivilege, upload.single("file"), addFoodMiddleware, uploadFileEnd);
+router.put("/editFood", Session.adminPrivilege, upload.single("file"), editFoodMiddleware, uploadFileEnd);
 module.exports = { menuRoutes: router };
