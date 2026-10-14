@@ -161,5 +161,20 @@ class FoodCategory {
         }
     }
 }
-
-module.exports = {Food, FoodCategory}
+class FoodCart { //WIP
+    static async getCartByAccountID(req, res, next) {
+        const sql1 = `SELECT * FROM FoodCart WHERE ;`
+        let foodCategoryResult = []
+        try {
+            foodCategoryResult = await allQuery(sql1, []);
+            res.locals.foodCategoryResult = foodCategoryResult; //pass to next function
+            next();
+        }
+        catch (error) {
+            console.log(error);
+            response.status(409).json({ error: "Could not retrieve food category due to SQL error"});
+            return;
+        }
+    }
+}
+module.exports = {Food, FoodCategory, FoodCart}

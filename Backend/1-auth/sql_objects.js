@@ -387,13 +387,16 @@ class Session { //handles tokens and user sessions
             }
         })
     }
-    static deleteToken(token) { //delete a specific token
+    static async deleteToken(token) { //delete a specific token
         const sql = `DELETE FROM Session WHERE token = ?`
-        db.run(sql, [token], (err) => {
-            if (err) {
-                console.log("Error querying database for Session.");
-            }
-        })
+        let result;
+        try {
+            result = await runQuery(sql, [token]);
+            return true;
+        }
+        catch (error) {
+            return false;
+        }
     }
     static expireTokensByID(accountID) { //remove all tokens belonging to that user (purge logins)
         accountID = parseInt(accountID);
