@@ -2,6 +2,8 @@
 -- user: root, password: rootmars
 INSERT INTO Account (username, email, passwordHash, roleID, firstName, lastName)
 VALUES ("root", "root@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 0, "admin", NULL);
+VALUES ("guest", "guest@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", -1, "guest", NULL);
+VALUES ("customer", "customer@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 3, "customer1", NULL);
 
 INSERT INTO Role (name)
 VALUES ("Manager"), ("Staff"), ("Customer");
