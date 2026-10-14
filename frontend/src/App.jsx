@@ -119,6 +119,7 @@ function App() {
             navigate("/");
         }
     }
+    
 
     function handleGuest() {
         const guestUser = { username: "Guest", name: "Guest", role: -1 };

@@ -42,6 +42,7 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
         let data = {};
         try {
             data = await response.json();
+            console.log("Login response data:", data); // F12 console to see the exact structure
         } catch (err) {
             console.log("Reply was not JSON. Status:", response.status);
         }
@@ -52,11 +53,14 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
         }
 
         if (isLogin) {
-            // Pass the logged-in user back up to App
+            const userRole = data.role !== undefined ? data.role : (data.user?.role ?? data.userRole);
+            const userName = data.username || data.user?.username || username;
+
+            // Pass the correctly populated user back up to App
             onLogin({
-                username: data.username || username,
-                name: data.username || username,
-                role: data.role
+                username: userName,
+                name: userName,
+                role: userRole
             });
         } else {
             // Account created, switch them to the Sign In tab and clear fields

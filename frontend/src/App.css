@@ -688,3 +688,10 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.old-price {
+    text-decoration: line-through;
+    color: #888;          /* Muted color for the old price */
+    margin-right: 8px;    /* Space between old price and discounted price */
+    font-size: 0.9em;     /* Optional: slightly smaller */
+}
