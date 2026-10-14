@@ -14,6 +14,20 @@ const uploadFileCheck = (req, res, next) => {
   }
   next();
 }*/
+async function editFoodMiddleware(req, res, next) { //needs id
+        const imageLink = req.file.filename
+        res.locals.errors = await Food.editFood(req.body.id, req.body.name, req.body.description, imageLink, 
+          req.body.price, req.body.discountedPrice, req.body.foodCategory, 
+          req.body.enabled, req.body.available, req.body.featured
+        )/*
+        if (res.locals.errors) {
+          return res.status(201).json(res.locals.errors);
+        }
+        else {
+          next();
+        }*/
+        next();
+}
 async function addFoodMiddleware(req, res, next) { //wrapper
         const imageLink = req.file.filename
         res.locals.errors = await Food.addFood(req.body.name, req.body.description, imageLink, 
@@ -46,5 +60,5 @@ const uploadFileEnd = (req, res) => {
 };
 
 module.exports = {
-  uploadFileEnd, addFoodMiddleware
+  uploadFileEnd, addFoodMiddleware, editFoodMiddleware
 };

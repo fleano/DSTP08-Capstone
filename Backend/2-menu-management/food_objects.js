@@ -74,8 +74,100 @@ class Food {
         }
 
     }
-    static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0, featured=0) {
+    static async editFood(id, name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0, featured=0) {
+        
+        let validationErrors = []
+        let setQueries = []
+        const idValidation = Number.isInteger(parseInt(foodCategory))
+        if (!idValidation) {
+            validationErrors.push("id is invalid")
+        }
+        const nameValidation = (name != null) && (name.length > 0);
+        if (!nameValidation) {
+            //validationErrors.push("Name is invalid")
+        }
+        else {
+            setQueries.push(`name = "${name}"`)
+        }
+        const descriptionValidation = (description != null) && (description.length > 0);
+        if (!descriptionValidation) {
+            //validationErrors.push("Description is invalid")
+        }
+        else {
+            setQueries.push(`description = "${description}"`)
+        }
+        if (imageLink != null) {
+            setQueries.push(`imageLink = "${imageLink}"`)
+        }
+        const priceValidation = !isNaN(parseFloat(price));
+        console.log("priceValidation", priceValidation)
+        if (!priceValidation) {
+            validationErrors.push("Price is invalid, must be number")
+        }
 
+        const discountedPriceValidation = discountedPrice == null || !isNaN(parseFloat(discountedPrice));
+        if (!discountedPriceValidation) {
+            validationErrors.push("Discounted price is invalid, must be null or number")
+        }
+        //convert to cents
+        if (priceValidation) {
+            price = Math.trunc(price * 100);
+            setQueries.push(`price = ${price}`)
+        }
+        if (discountedPriceValidation && discountedPrice != null) { //do not process if null
+            discountedPrice = Math.trunc(discountedPrice * 100);
+            setQueries.push(`discountedPrice = ${discountedPrice}`)
+        }
+        //
+        const foodCategoryValidation = Number.isInteger(parseInt(foodCategory))
+        if (!foodCategoryValidation) {
+            validationErrors.push("Food category is invalid, must be int")
+        }
+        else {
+            setQueries.push(`foodCategory = ${foodCategory}`)
+        }
+        const enabledValidation = Number.isInteger(parseInt(enabled)) && (enabled == 0 || enabled == 1);
+        if (!enabledValidation) {
+            validationErrors.push("Enabled is invalid, must be 0 or 1")
+        }
+        else {
+            setQueries.push(`enabled = ${enabled}`)
+        }
+        const availableValidation = Number.isInteger(parseInt(available)) && (available == 0 || available == 1);
+        if (!availableValidation) {
+            validationErrors.push("Available is invalid, must be 0 or 1")
+        }
+        else {
+            setQueries.push(`available = ${available}`)
+        }
+        const featuredValidation = Number.isInteger(parseInt(featured)) && (featured == 0 || featured == 1);
+        if (!featuredValidation) {
+            validationErrors.push("Featured is invalid, must be 0 or 1")
+        }
+        else {
+            setQueries.push(`featured = ${featured}`)
+        }
+        const sql = `UPDATE FOOD SET
+        ${setQueries.join(",")}
+        WHERE id = ?;` //9 args
+        console.log(sql)
+        if (idValidation) {
+            try {
+                const result = await runQuery(sql, [id])
+                console.log(error, validationErrors.join('\n'));
+                return {validationErrors: validationErrors.join('\n')};;
+            }
+            catch (error) {
+                console.log(error, validationErrors.join('\n'));
+                return {error: error, validationErrors: validationErrors.join('\n')};
+            }
+        }
+        else {
+            console.log(validationErrors.join('\n'));
+            return {validationErrors: validationErrors.join('\n')};
+        }
+    }
+    static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0, featured=0) {
         let validationErrors = []
         const nameValidation = (name != null) && (name.length > 0);
         if (!nameValidation) {

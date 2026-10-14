@@ -364,28 +364,55 @@ class Session {
   constructor(accountID, tokens) {
     this.accountID = accountID;
     this.tokens = tokens; // [token, ...]
-  } /*
-    static getSessionByID(accountID) {
-        accountID = parseInt(accountID);
-        if (accountID == NaN) {
-            console.log("Could not expire tokens, accountID specified is invalid.");
-            return false;
+  } 
+  /*
+  static async checkPrivilege(req, res, next) {
+    const incomingToken = req.get('Authorization');
+    const result = await Session.getRoleByToken(incomingToken);
+    switch (result) {
+        case 0:
+            //admin
+            next = Session.adminPrivilege
+            break;
+        case 1:
+            //manager
+            break;
+        case 2:
+            //staff
+            break;
+        case 3:
+            //customer
+            break;
+        default:
+            //guest
+    }
+    next();
+  }*/
+  static async adminPrivilege(req, res, next) {
+    const incomingToken = req.get('Authorization');
+    const result = await Session.getRoleByToken(incomingToken);
+    if (result == 0) {
+        next()
+    }
+    else {
+        return res.status(404).json("Page not found");
+    }
+  }
+    static async getRoleByToken(token) { //access control to be handled by backend.
+        const sql1 = `SELECT Account.roleID FROM Account 
+        INNER JOIN Session ON Account.id = Session.accountID
+        WHERE Session.token = ? 
+        ;`
+        let result;
+        try {
+            result = await getQuery(sql1, [token]);
+            return result.roleID;
+        } 
+        catch (error) {
+            console.log("Could not check token, due to sql error.", error.message);
+            return null;
         }
-        const sql = `SELECT token FROM Session
-            WHERE accountID = ?;`;
-        db.all(sql, [accountID], (err, rows) => {
-            if (err) {
-                console.log("Error querying database for Session.");
-                return null;
-            }
-            if (rows.length == 0) {
-                console.log("No session tokens exist for this ID.");
-                return null;
-            }
-            const tokens = transpose(rows);
-            return new Session(accountID, tokens);
-        });
-    }*/
+    }
   static async isTokenInDB(token) {
     const sql = `SELECT token, expiry FROM Session WHERE token = ?`;
     let result = null;
