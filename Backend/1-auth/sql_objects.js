@@ -364,30 +364,7 @@ class Session {
   constructor(accountID, tokens) {
     this.accountID = accountID;
     this.tokens = tokens; // [token, ...]
-  } 
-  /*
-  static async checkPrivilege(req, res, next) {
-    const incomingToken = req.get('Authorization');
-    const result = await Session.getRoleByToken(incomingToken);
-    switch (result) {
-        case 0:
-            //admin
-            next = Session.adminPrivilege
-            break;
-        case 1:
-            //manager
-            break;
-        case 2:
-            //staff
-            break;
-        case 3:
-            //customer
-            break;
-        default:
-            //guest
-    }
-    next();
-  }*/
+  }
   static async adminPrivilege(req, res, next) {
     const incomingToken = req.get('Authorization');
     const result = await Session.getRoleByToken(incomingToken);
@@ -398,21 +375,55 @@ class Session {
         return res.status(404).json("Page not found");
     }
   }
-    static async getRoleByToken(token) { //access control to be handled by backend.
-        const sql1 = `SELECT Account.roleID FROM Account 
-        INNER JOIN Session ON Account.id = Session.accountID
-        WHERE Session.token = ? 
-        ;`
-        let result;
-        try {
-            result = await getQuery(sql1, [token]);
-            return result.roleID;
-        } 
-        catch (error) {
-            console.log("Could not check token, due to sql error.", error.message);
-            return null;
-        }
+  static async customerPrivilege(req, res, next) { //customers and above
+    const incomingToken = req.get('Authorization');
+    const result = await Session.getRoleByToken(incomingToken);
+    const roleIDs = [0, 1, 2, 3]
+    if (roleIDs.includes(result)) {
+        next()
     }
+    else {
+        return res.status(404).json("Page not found");
+    }
+  }
+  static async staffOnlyPrivilege(req, res, next) { //staff only
+    const incomingToken = req.get('Authorization');
+    const result = await Session.getRoleByToken(incomingToken);
+    const roleIDs = [2]
+    if (roleIDs.includes(result)) {
+        next()
+    }
+    else {
+        return res.status(404).json("Page not found");
+    }
+  }
+  static async managerOnlyPrivilege(req, res, next) { //manager only
+    const incomingToken = req.get('Authorization');
+    const result = await Session.getRoleByToken(incomingToken);
+    const roleIDs = [1]
+    if (roleIDs.includes(result)) {
+        next()
+    }
+    else {
+        return res.status(404).json("Page not found");
+    }
+  }
+
+  static async getRoleByToken(token) { //access control to be handled by backend.
+      const sql1 = `SELECT Account.roleID FROM Account
+      INNER JOIN Session ON Account.id = Session.accountID
+      WHERE Session.token = ?
+      ;`
+      let result;
+      try {
+          result = await getQuery(sql1, [token]);
+          return result.roleID;
+      }
+      catch (error) {
+          console.log("Could not check token, due to sql error.", error.message);
+          return null;
+      }
+  }
   static async isTokenInDB(token) {
     const sql = `SELECT token, expiry FROM Session WHERE token = ?`;
     let result = null;
