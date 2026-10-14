@@ -9,7 +9,7 @@ const db = database;
 //const { upload } = require('./middleware.js')
 
 class Food {
-    static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0) {
+    static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0, featured=0) {
 
         let validationErrors = []
         const nameValidation = (name != null) && (name.length > 0);
@@ -20,20 +20,20 @@ class Food {
         if (!descriptionValidation) {
             validationErrors.push("Description is invalid")
         }
-        const priceValidation = Number.isInteger(parseInt(price));
+        const priceValidation = !isNaN(parseFloat(price));
         console.log("priceValidation", priceValidation)
         if (!priceValidation) {
-            validationErrors.push("Price is invalid, must be int")
+            validationErrors.push("Price is invalid, must be number")
         }
-        const discountedPriceValidation = discountedPrice == null || Number.isInteger(parseInt(discountedPrice));
+        const discountedPriceValidation = discountedPrice == null || !isNaN(parseFloat(discountedPrice));
         if (!discountedPriceValidation) {
-            validationErrors.push("Discounted price is invalid, must be null or int")
+            validationErrors.push("Discounted price is invalid, must be null or number")
         }
         //convert to cents
         if (priceValidation) {
             price = Math.trunc(price * 100);
         }
-        if (discountedPriceValidation) {
+        if (discountedPriceValidation && discountedPrice != null) { //do not process if null
             discountedPrice = Math.trunc(discountedPrice * 100);
         }
         //
@@ -49,13 +49,19 @@ class Food {
         if (!availableValidation) {
             validationErrors.push("Available is invalid, must be 0 or 1")
         }
+        const featuredValidation = Number.isInteger(parseInt(featured)) && (featured == 0 || featured == 1);
+        if (!featuredValidation) {
+            validationErrors.push("Featured is invalid, must be 0 or 1")
+        }
         const sql = `INSERT INTO Food (name, description, imageLink, price, 
-        discountedPrice, foodCategory, enabled, available)
-        VALUES (?,?,?,?,?,?,?,?);`; //8 args
+        discountedPrice, foodCategory, enabled, available, featured)
+        VALUES (?,?,?,?,?,?,?,?,?);`; //9 args
         if (validationErrors.length == 0) {
             try {
-                const result = await runQuery(sql, [name, description, imageLink, price, 
-                    discountedPrice, foodCategory, enabled, available])
+                const result = await runQuery(sql, [
+                    name, description, imageLink, 
+                    price, discountedPrice, foodCategory, 
+                    enabled, available, featured])
                     return;
             }
             catch (error) {
@@ -68,14 +74,20 @@ class Food {
             return {validationErrors: validationErrors.join('\n')};
         }
     }
-    static convertDollarsandCents(array) {
+    static preprocessFoodRow(array) { //converts to dollars and cents and converts image name to static ref
         for (let i = 0; i < array.length; i++) {
+            array[i].imageLink = Food.appendImageDirectory(array[i].imageLink)
             array[i].price /= 100;
             if (array[i].discountedPrice != null) {
                 array[i].discountedPrice /= 100;
             }
         }
         return array
+    }
+    static appendImageDirectory(filename) {
+        // ?/uploads/foodImages/file.name
+        const dir = 'uploads/' + 'foodImages/' + filename;
+        return dir;
     }
     static async getAllFood(req, res, next) {
         const sql = `SELECT * FROM Food;`
@@ -89,9 +101,26 @@ class Food {
             response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
             return;
         }
-        //convert price to dollars and cents
-        result = Food.convertDollarsandCents(result);
-        res.body.foodList = result;
+        //convert price to dollars and cents and href
+        result = Food.preprocessFoodRow(result);
+        res.locals.foodList = result;
+        next();
+    }
+    static async getAllFoodFeatured(req, res, next) {
+        const sql = `SELECT * FROM Food WHERE featured = 1;`
+        let result = []
+        try {
+            result = await allQuery(sql, []);
+
+        }
+        catch (error) {
+            console.log(error);
+            response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
+            return;
+        }
+        //convert price to dollars and cents and href
+        result = Food.preprocessFoodRow(result);
+        res.locals.foodList = result;
         next();
     }
     static async getFoodByCategory(req, res, next) { //intended for filtering
@@ -112,7 +141,7 @@ class Food {
         }
         //convert price to dollars and cents
         result = Food.convertDollarsandCents(result);
-        res.body.foodList = result;
+        res.locals.foodList = result;
         next();
     }
 }

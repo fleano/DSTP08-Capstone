@@ -36,10 +36,7 @@ function Homepage({ user, isGuest, menuItems, loading, addToCart, onNavigateToLo
                     {featuredItems.map((item) => (
                         <FoodCard
                             key={item.id}
-                            name={item.name}
-                            description={item.description}
-                            price={item.price}
-                            image={item.image}
+                            item={item} 
                             onOrder={() => addToCart(item, 1)}
                         />
                     ))}

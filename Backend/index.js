@@ -15,9 +15,9 @@ const { analyticsRoutes } = require('./4-analystics-dashboard/analystics-dashboa
 const app = express();
 const port = process.env.PORT || 3000;
 
-const uploadsDirectory = path.join(__dirname, 'uploads');
+const uploadsDirectory = path.join(__dirname, 'uploads', 'foodImages');
 app.use(corsMiddleware);
-app.use('/uploads', express.static(uploadsDirectory));
+app.use('/uploads/foodImages', express.static(uploadsDirectory));
 app.use(express.json());
 app.use(requestLogger);
 
