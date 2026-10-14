@@ -5,12 +5,23 @@ import '../App.css';
 export default function StaffDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'schedule'
 
+  // Helper to convert numeric role into a display string
+  const getRoleDisplay = (role) => {
+    const r = Number(role);
+    if (r === 0) return 'ADMIN';
+    if (r === 1) return 'MANAGER';
+    if (r === 2) return 'STAFF';
+    return 'STAFF';
+  };
+
+  const isManagerOrAdmin = Number(user.role) === 0 || Number(user.role) === 1;
+
   return (
     <div className="homepage-wrapper">
       {/* Staff Top Navigation */}
       <nav className="navbar">
         <div className="nav-brand">
-          <span className="brand-icon">🛡️</span> Staff Portal ({user.role.toUpperCase()})
+          <span className="brand-icon">🛡️</span> Staff Portal ({getRoleDisplay(user.role)})
         </div>
         <div className="nav-links">
           <button 

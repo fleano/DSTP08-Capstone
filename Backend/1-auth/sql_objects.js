@@ -365,6 +365,7 @@ class Session {
     this.accountID = accountID;
     this.tokens = tokens; // [token, ...]
   } 
+  
   /*
   static async checkPrivilege(req, res, next) {
     const incomingToken = req.get('Authorization');
@@ -388,6 +389,19 @@ class Session {
     }
     next();
   }*/
+
+  static async managerPlusPrivilege(req, res, next) {
+        const incomingToken = req.get('Authorization');
+        const result = await Session.getRoleByToken(incomingToken);
+        // Allow Admin (0) and Manager (1)
+        if (result === 0 || result === 1) {
+            next();
+        } else {
+            return res.status(403).json({ error: "Access denied. Manager or Admin privilege required." });
+        }
+    }
+
+
   static async adminPrivilege(req, res, next) {
     const incomingToken = req.get('Authorization');
     const result = await Session.getRoleByToken(incomingToken);

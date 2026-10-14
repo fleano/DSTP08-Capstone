@@ -3,8 +3,9 @@ import "./App.css";
 
 function AdminCreateAccount({ onBack }) {
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("3"); // 3 = customer, 2 = staff, 1 = manager
+    const [roleID, setRoleID] = useState("3"); // 3 = customer, 2 = staff, 1 = manager
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
@@ -13,46 +14,52 @@ function AdminCreateAccount({ onBack }) {
         setError("");
         setSuccess("");
 
-        if (username === "" || password === "") {
-            setError("Please fill in all fields.");
+        if (!username || !email || !password) {
+            setError("Please fill in all fields (including email).");
             return;
         }
 
-        // Step 1: send the request
+        // Retrieve the stored JWT token
+        const token = localStorage.getItem("token");
+
         let response;
         try {
-            response = await fetch("/api/admin/create-user", {
+            response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/admin/create-user`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": token ? token : "" 
+                },
                 body: JSON.stringify({
                     username: username,
+                    email: email,
                     password: password,
-                    role: Number(role)
+                    roleID: Number(roleID)
                 })
             });
         } catch (err) {
-            setError("Cannot reach the server. Please try again later.");
+            console.error("Network fetch error:", err);
+            setError("Cannot reach the server. Please check your network or backend URL.");
             return;
         }
 
-        // Step 2: read the reply (it might not be JSON, so we check for that too)
         let data = {};
         try {
             data = await response.json();
         } catch (err) {
             console.log("Reply was not JSON. Status:", response.status);
         }
-        console.log("Response from backend:", response.status, data);
 
         if (!response.ok) {
-            setError(data.message || "Request failed (status " + response.status + ").");
+            setError(data.error || data.message || "Request failed (status " + response.status + ").");
             return;
         }
 
         setSuccess("Account created for " + username + "!");
         setUsername("");
+        setEmail("");
         setPassword("");
-        setRole("3");
+        setRoleID("3");
     }
 
     return (
@@ -82,6 +89,16 @@ function AdminCreateAccount({ onBack }) {
                     </div>
 
                     <div className="form-group">
+                        <label className="form-label">Email</label>
+                        <input
+                            className="form-input"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="form-group">
                         <label className="form-label">Password</label>
                         <input
                             className="form-input"
@@ -95,8 +112,8 @@ function AdminCreateAccount({ onBack }) {
                         <label className="form-label">Account Type</label>
                         <select
                             className="form-input"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
+                            value={roleID}
+                            onChange={(e) => setRoleID(e.target.value)}
                         >
                             <option value="3">Customer</option>
                             <option value="2">Staff</option>

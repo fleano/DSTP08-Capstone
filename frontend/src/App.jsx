@@ -9,6 +9,7 @@ import ManageMenu from "./ManageMenu.jsx";
 import StaffDashboard from "./staff/StaffDashboard.jsx";
 import { mockCategories, mockMenuItems } from "./mockMenuData.js";
 import { getFinalPrice } from "./priceHelper.js";
+import ManageAccounts from "./ManageAccounts.jsx";
 import "./App.css";
 
 function App() {
@@ -17,8 +18,25 @@ function App() {
 
     // 1. Initialize user state by reading from localStorage
     const [user, setUser] = useState(() => {
-        const savedUser = localStorage.getItem("restaurant_user");
-        return savedUser ? JSON.parse(savedUser) : null;
+        try {
+            const savedUser = localStorage.getItem("restaurant_user");
+            console.log(savedUser);
+            if (!savedUser) return null;
+            
+            const parsed = JSON.parse(savedUser);
+            
+            // Check if it's a valid non-empty object with a role or username
+            if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0 && (parsed.role !== undefined || parsed.username)) {
+                return parsed;
+            }
+            
+            // If it's an empty object {} or invalid, clean it up
+            localStorage.removeItem("restaurant_user");
+            return null;
+        } catch (err) {
+            localStorage.removeItem("restaurant_user");
+            return null;
+        }
     });
 
     const [loginNotice, setLoginNotice] = useState("");
@@ -33,7 +51,6 @@ function App() {
     const [cartOpen, setCartOpen] = useState(false);
 
     function isStaffRole(role) {
-        console.log(role);
         const r = Number(role);
         // Returns true for Admin (0), Manager (1), Staff (2)
         return r === 0 || r === 1 || r === 2;
@@ -113,11 +130,8 @@ function App() {
         localStorage.setItem("restaurant_user", JSON.stringify(loggedInUser));
 
 
-        console.log("before the if");
         // Staff go to dashboard, others go to homepage
-        console.log("123", loggedInUser);
         if (isStaffRole(loggedInUser.role)) {
-            console.log("this is ran");
             navigate("/staff");
         } else {
             navigate("/");
@@ -261,6 +275,16 @@ function App() {
                                             >
                                                 Manage Menu
                                             </button>
+                                            
+                                            {/* Manage Accounts: Accessible by Manager Plus (Admins & Managers) */}
+                                            <button
+                                                className="admin-bar-btn"
+                                                onClick={() => navigate("/manage-accounts")}
+                                            >
+                                                Manage Accounts
+                                            </button>
+
+                                            {/* Create Account: Strictly Admin Only */}
                                             {isAdminRole(user.role) && (
                                                 <button
                                                     className="admin-bar-btn"
@@ -307,6 +331,19 @@ function App() {
                         )
                     }
                 />
+
+                {/* 3. Added ManageAccounts Route */}
+                <Route
+                    path="/manage-accounts"
+                    element={
+                        user && isManagerPlusRole(user.role) ? (
+                            <ManageAccounts onBack={() => navigate("/staff")} />
+                        ) : (
+                            <Navigate to="/" />
+                        )
+                    }
+                />
+
             </Routes>
 
             {showCart && (
