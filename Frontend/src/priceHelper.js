@@ -6,32 +6,29 @@ function round(number) {
 }
 
 export function getFinalPrice(item) {
-    const price = Number(item.price);
-    const value = Number(item.discountValue);
-
-    if (item.discountType === "percent" && value > 0 && value < 100) {
-        return round(price * (1 - value / 100));
-    }
-
-    // A special price only counts if it is lower than the normal price
-    if (item.discountType === "fixed" && value > 0 && value < price) {
-        return round(value);
-    }
-
-    return round(price);
+    return hasDiscount(item) ? Number(item.discountedPrice) : Number(item.price);
 }
 
 export function hasDiscount(item) {
-    return getFinalPrice(item) < Number(item.price);
+    return item.discountedPrice !== null && item.discountedPrice !== undefined && item.discountedPrice < item.price;
 }
+
+export function getDiscountPercentage(item) {
+    if (!hasDiscount(item)) return 0;
+    const discount = item.price - item.discountedPrice;
+    return Math.round((discount / item.price) * 100);
+}
+
+
 
 // This is for the little badge on the picture
 export function getBadgeText(item) {
-    if (!hasDiscount(item)) {
-        return "";
+    if (hasDiscount(item)) {
+        const pct = getDiscountPercentage(item);
+        return `${pct}% OFF`;
     }
-    if (item.discountType === "percent") {
-        return "-" + Number(item.discountValue) + "%";
+    if (item.featured) {
+        return "Featured";
     }
-    return "SPECIAL";
+    return "";
 }
