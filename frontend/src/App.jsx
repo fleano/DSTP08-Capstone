@@ -1,177 +1,255 @@
-import React, { useState } from 'react';
-import './App.css';
-import Homepage from './homepage.jsx'; // Customer view
-import StaffDashboard from './staff/StaffDashboard.jsx'; // Server & Manager view
+import { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import Homepage from "./homepage.jsx";
+import MenuPage from "./MenuPage.jsx";
+import LoginPage from "./LoginPage.jsx";
+import AdminCreateAccount from "./AdminCreateAccount.jsx";
+import CartPanel from "./CartPanel.jsx";
+import StaffDashboard from "./staff/StaffDashboard.jsx";
+import { mockCategories, mockMenuItems } from "./mockMenuData.js";
+import "./App.css";
 
-export default function App() {
-  const [currentView, setCurrentView] = useState('customer'); // 'login', 'customer', 'staff'
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState('');
+function App() {
+    const navigate = useNavigate();
+    const location = useLocation();
 
-const handleLoginSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
+    const [user, setUser] = useState(null);
+    const [loginNotice, setLoginNotice] = useState("");
 
-  if (!email || !password) {
-    setError('Please fill in all fields.');
-    return;
-  }
+    // Menu data from the backend
+    const [categories, setCategories] = useState([]);
+    const [menuItems, setMenuItems] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  try {
-    // Attempt to connect to your backend login API
-    // This is assuming the backend stores the data at the route "/api/login"
-    const response = await fetch('/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name: !isLogin ? name : undefined }),
-    });
+    // Cart
+    const [cart, setCart] = useState([]);
+    const [cartOpen, setCartOpen] = useState(false);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.message || 'Login failed.');
-      return;
+    // Roles from the API: guest = -1, admin = 0, manager = 1, staff = 2, customer = 3
+    // The role might come back as a number (0), a text number ("0") or a word ("admin"),
+    // so we turn it into lowercase text first and check all of them
+    function isStaffRole(role) {
+        const r = String(role).toLowerCase();
+        return (
+            r === "0" || r === "1" || r === "2" ||
+            r === "admin" || r === "root" || r === "manager" || r === "staff"
+        );
     }
 
-    // Successful login here
-    const loggedInUser = {
-      email: data.email,
-      name: data.name,
-      role: data.role, // 'customer', 'server', or 'manager'
-    };
+    function isAdminRole(role) {
+        const r = String(role).toLowerCase();
+        return r === "0" || r === "admin" || r === "root";
+    }
 
-    setUser(loggedInUser);
-    setCurrentView(loggedInUser.role === 'customer' ? 'customer' : 'staff');
+    function isGuestRole(role) {
+        const r = String(role).toLowerCase();
+        return r === "-1" || r === "guest";
+    }
 
-  } catch (err) {
-    console.warn('Backend connection failed. Falling back to Guest/Staff mode:', err);
-    
-    // Check if the email indicates a manager or staff member
-    // if the email includes "manager", it will be a staff account
-    const isStaffEmail = email.toLowerCase().includes('manager') || email.toLowerCase().includes('staff');
+    const isGuest = user !== null && isGuestRole(user.role);
 
-    const fallbackUser = {
-      email: email || 'guest@restaurant.com',
-      name: name || email.split('@')[0] || 'User',
-      role: isStaffEmail ? 'manager' : 'customer',
-    };
+    // Get the categories and food items from the backend when the app first loads
+    useEffect(() => {
+        async function loadMenu() {
+            try {
+                const categoryResponse = await fetch("/api/categories");
+                const menuResponse = await fetch("/api/menu");
 
-    setUser(fallbackUser);
-    setCurrentView(fallbackUser.role === 'customer' ? 'customer' : 'staff');
-  }
-};
+                if (categoryResponse.ok && menuResponse.ok) {
+                    const categoryData = await categoryResponse.json();
+                    const menuData = await menuResponse.json();
 
-  // 1. If viewing Customer Homepage
-  if (currentView === 'customer') {
+                    setCategories(categoryData);
+                    // make sure every item has an id (some databases call it _id)
+                    setMenuItems(menuData.map((item) => ({ ...item, id: item.id || item._id })));
+                } else {
+                    setCategories(mockCategories);
+                    setMenuItems(mockMenuItems);
+                }
+            } catch (err) {
+                console.log("Backend fetch failed, using mock data:", err);
+                setCategories(mockCategories);
+                setMenuItems(mockMenuItems);
+            }
+            setLoading(false);
+        }
+
+        loadMenu();
+    }, []);
+
+    // ---------- Login / logout ----------
+
+    function goToLogin(message) {
+        setLoginNotice(message);
+        navigate("/login");
+    }
+
+    function handleLogin(loggedInUser) {
+        setUser(loggedInUser);
+
+        // Staff go to the dashboard, everyone else goes to the homepage
+        if (isStaffRole(loggedInUser.role)) {
+            navigate("/staff");
+        } else {
+            navigate("/");
+        }
+    }
+
+    function handleGuest() {
+        setUser({ username: "Guest", name: "Guest", role: -1 });
+        navigate("/");
+    }
+
+    async function handleLogout() {
+        // Tell the backend we are logging out too
+        try {
+            await fetch("/auth/logout", { method: "POST" });
+        } catch (err) {
+            console.log("Logout request failed:", err);
+        }
+
+        setUser(null);
+        setCart([]);
+        navigate("/");
+    }
+
+    // ---------- Cart ----------
+
+    function addToCart(item, quantity) {
+        setCart((prevCart) => {
+            const existing = prevCart.find((c) => c.id === item.id);
+
+            // Already in the cart? Just add to the quantity
+            if (existing) {
+                return prevCart.map((c) =>
+                    c.id === item.id ? { ...c, quantity: c.quantity + quantity } : c
+                );
+            }
+
+            return [
+                ...prevCart,
+                { id: item.id, name: item.name, price: Number(item.price), quantity: quantity }
+            ];
+        });
+    }
+
+    function changeQuantity(id, change) {
+        setCart((prevCart) =>
+            prevCart.map((c) =>
+                c.id === id ? { ...c, quantity: Math.max(1, c.quantity + change) } : c
+            )
+        );
+    }
+
+    function removeFromCart(id) {
+        setCart((prevCart) => prevCart.filter((c) => c.id !== id));
+    }
+
+    function clearCart() {
+        setCart([]);
+    }
+
+    // The cart button only shows on the customer pages
+    const showCart = location.pathname === "/" || location.pathname === "/menu";
+
     return (
-      <Homepage
-        user={user}
-        onNavigateToLogin={() => setCurrentView('login')}
-        onLogout={() => { setUser(null); setCurrentView('customer'); }}
-      />
-    );
-  }
-
-  // 2. If viewing Staff / Manager Dashboard
-  if (currentView === 'staff') {
-    return (
-      <StaffDashboard
-        user={user}
-        onLogout={() => { setUser(null); setCurrentView('login'); }}
-      />
-    );
-  }
-
-  // 3. Default: Login / Register View
-  return (
-    <div className="restaurant-auth-container">
-      <div className="auth-card">
-        <button 
-          className="back-to-home-btn"
-          onClick={() => setCurrentView('customer')}
-        >
-          ← Continue as Guest / Customer Home
-        </button>
-
-        <div className="auth-header">
-          <div className="auth-logo-icon">🍜</div>
-          <h1 className="auth-title">Restaurant Portal</h1>
-          <div className="auth-subtitle">Customer & Staff Sign In</div>
-        </div>
-
-        <div className="tab-container">
-          <button
-            type="button"
-            onClick={() => { setIsLogin(true); setError(''); }}
-            className={`tab-btn ${isLogin ? 'active' : ''}`}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setIsLogin(false); setError(''); }}
-            className={`tab-btn ${!isLogin ? 'active' : ''}`}
-          >
-            Create Account
-          </button>
-        </div>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <form onSubmit={handleLoginSubmit}>
-          {!isLogin && (
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <div className="input-wrapper">
-                <span className="input-icon">👤</span>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Xiao Ming"
-                  className="form-input"
+        <div>
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <Homepage
+                            user={user}
+                            isGuest={isGuest}
+                            menuItems={menuItems}
+                            loading={loading}
+                            addToCart={addToCart}
+                            onNavigateToLogin={() => goToLogin("")}
+                            onLogout={handleLogout}
+                        />
+                    }
                 />
-              </div>
-            </div>
-          )}
 
-          <div className="form-group">
-            <label className="form-label">Email Address (Test for staff: use 'manager@rest.com' for staff view)</label>
-            <div className="input-wrapper">
-              <span className="input-icon">✉️</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@restaurant.com"
-                className="form-input"
-              />
-            </div>
-          </div>
+                <Route
+                    path="/menu"
+                    element={
+                        <MenuPage
+                            user={user}
+                            isGuest={isGuest}
+                            categories={categories}
+                            menuItems={menuItems}
+                            loading={loading}
+                            addToCart={addToCart}
+                            onNavigateToLogin={() => goToLogin("")}
+                            onLogout={handleLogout}
+                        />
+                    }
+                />
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <div className="input-wrapper">
-              <span className="input-icon">🔒</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="form-input"
-              />
-            </div>
-          </div>
+                <Route
+                    path="/login"
+                    element={
+                        <LoginPage
+                            notice={loginNotice}
+                            onLogin={handleLogin}
+                            onGuest={handleGuest}
+                            onBack={() => navigate("/")}
+                        />
+                    }
+                />
 
-          <button type="submit" className="submit-btn" style={{ marginTop: isLogin ? '0' : '1.5rem' }}>
-            {isLogin ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
+                {/* Only staff, managers and the admin can open the dashboard */}
+                <Route
+                    path="/staff"
+                    element={
+                        user && isStaffRole(user.role) ? (
+                            <div>
+                                {isAdminRole(user.role) && (
+                                    <div className="admin-bar">
+                                        <span>Logged in as {user.username} (admin)</span>
+                                        <button
+                                            className="admin-bar-btn"
+                                            onClick={() => navigate("/create-account")}
+                                        >
+                                            Create Account
+                                        </button>
+                                    </div>
+                                )}
+                                <StaffDashboard user={user} onLogout={handleLogout} />
+                            </div>
+                        ) : (
+                            <Navigate to="/" />
+                        )
+                    }
+                />
+
+                {/* Only the admin (root) can open the create account page */}
+                <Route
+                    path="/create-account"
+                    element={
+                        user && isAdminRole(user.role) ? (
+                            <AdminCreateAccount onBack={() => navigate("/staff")} />
+                        ) : (
+                            <Navigate to="/" />
+                        )
+                    }
+                />
+            </Routes>
+
+            {showCart && (
+                <CartPanel
+                    cart={cart}
+                    user={user}
+                    isOpen={cartOpen}
+                    onToggle={() => setCartOpen(!cartOpen)}
+                    onChangeQuantity={changeQuantity}
+                    onRemove={removeFromCart}
+                    onClearCart={clearCart}
+                    onNeedLogin={() => goToLogin("Please sign in or continue as a guest to check out.")}
+                />
+            )}
+        </div>
+    );
 }
+
+export default App;
