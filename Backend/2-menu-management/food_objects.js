@@ -241,15 +241,33 @@ class FoodCategory {
     }
 }
 class FoodCart { //WIP
-    constructor(accountID, foodItems) { //OOP-friendly representation
+    constructor(accountID, orderItems) { //OOP-friendly representation
         this.accountID = accountID
-        this.foodItems = foodItems; //array
+        this.orderItems = orderItems; //array
     }
     static async makeFoodCart(accountID) {
-        
+        const sql1 = `SELECT * FROM FoodCart WHERE accountID = ?;`
+        let result;
+        try {
+            result = await allQuery(sql1, [accountID]);
+        }
+        catch (error) {
+            console.log(error);
+            return null;
+        }
+        if (!result) {
+            console.log("No items in cart")
+            return FoodCart(accountID, []);
+        }
+        let orderItems = []
+        for (row of result) {
+            orderItems.push({orderID: row.orderID, foodID: row.foodID, costPrice: row.costPrice, quantity: row.quantity})
+        }
+        return FoodCart(accountID, orderItems);
     }
+    /*
     async clearCart() {
-        const sql1 = `DELETE FROM FoodCart WHERE accountID = ?`
+        const sql1 = `DELETE FROM FoodCart WHERE accountID = ?;`
         try {
             runQuery(sql1, [this.accountID]);
             this.foodItems = []; //clear
@@ -259,7 +277,19 @@ class FoodCart { //WIP
             console.log(error);
             return false
         }
+    }*/
+    static async clearCart(req, res, next) {
+        const sql1 = `DELETE FROM FoodCart WHERE accountID = ?;`
+        const accountID = Session.getIDByToken(req.get('Authorization'))
+        try {
+            runQuery(sql1, [accountID]);
+            res.status(201).json({"message": "Clear cart OK"});
+        }
+        catch (error) {
+            return res.status(409).json({error: "Error deleting from FoodCart"})
+        }
     }
+        /*
     async checkout() {
         if (this.foodItems.length == 0) {
             console.log("Cannot checkout an empty foodcart");
@@ -273,7 +303,7 @@ class FoodCart { //WIP
         const orderID = result.orderID
         //create rows in OrderHistoryItems for each item in this.foodItems
         let values = []
-        for (item of this.foodItems) {
+        for (item of this.orderItems) {
             values.push(`(${orderID}, ${item.foodID}, ${item.costPrice}, ${item.quantity})`); //sql bracket format
         }
         values = values.join(',');
@@ -281,6 +311,54 @@ class FoodCart { //WIP
         VALUES ${values};`
         //delete rows in FoodCart where accountID = this.accountID
         this.clearCart();
+    }*/
+    static async checkout(req, res, next) {
+        //check FoodCart for items
+        const sql0 = `SELECT * FROM FoodCart WHERE accountID = ?;`
+        let orderItems;
+        const accountID = Session.getIDByToken(req.get('Authorization'))
+        try {
+            orderItems = await allQuery(sql0, [accountID])
+        }
+        catch (error) {
+            return res.status(409).json({error: "Error querying FoodCart"})
+        }
+        //create a row in OrderHistory
+        const sql1 = `INSERT INTO OrderHistory (orderDate, accountID)
+        VALUES (?,?);`
+        const orderDate = Date.now() / 1000;
+        try {
+            await runQuery(sql1, [orderDate, accountID]);
+        }
+        catch (error) {
+            return res.status(409).json({error: "Error inserting into OrderHistory"})
+        }
+        //select this row
+        const sql2 = `SELECT orderID FROM OrderHistory ORDER BY orderID DESC LIMIT 1;`
+        try {
+            result = await getQuery(sql2, []);
+        }
+        catch (error) {
+            return res.status(409).json({error: "Error selecting from OrderHistory"})
+        }
+        const orderID = result.orderID
+        //create rows in OrderHistoryItems for each item
+        let values = []
+        for (item of orderItems) {
+            values.push(`(${orderID}, ${item.foodID}, ${item.costPrice}, ${item.quantity})`); //sql bracket format
+        }
+        values = values.join(',');
+        const sql3 = `INSERT INTO OrderHistoryItems (orderID, foodID, costPrice, quantity)
+        VALUES ${values};`
+        try {
+            runQuery(sql3, []);
+            next();
+            //clear cart after this!
+        }
+        catch (error) {
+
+        }
+        //delete rows in FoodCart where accountID = this.accountID
     }
     static async getCartByAccountID(req, res, next) {
         let result = []

@@ -3,7 +3,7 @@ const { Router } = require("express");
 const { uploadFileEnd, addFoodMiddleware } = require("./controllers/uploadFile.controller");
 const { upload } = require("./middleware");
 const { decodeToken } = require("../1-auth/sql_objects")
-const {Food, FoodCategory} = require("./food_objects")
+const {Food, FoodCategory, FoodCart} = require("./food_objects")
 
 const router = Router();
 
@@ -19,8 +19,9 @@ router.get("/all", Food.getAllFood, async (request, response) => {
 router.get("/featured", Food.getAllFoodFeatured, async (request, response) => {
   response.status(200).json({ message: response.locals.foodList });
 });
-
-
+router.post("/cart", FoodCart.getCartByAccountID);
+router.post("/clearCart", FoodCart.clearCart);
+router.post("/checkout", FoodCart.checkout, FoodCart.clearCart);
 // Protected Routes
 
 // TODO: Add authentication middleware to protect this route
