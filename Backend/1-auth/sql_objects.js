@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt'); //cryptographic module
 const jwt = require('jsonwebtoken') // jsonwebtoken
 const fs = require('fs'); //filesystem
 const path = require('path'); //file dir
+const multer = require('multer')
+const profileImages = multer({ dest: '/profileImages/' })
 //key files
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key-rs256.pem'));
 const publicKey = fs.readFileSync(path.join(__dirname, 'public-key-rs256.pem'));
@@ -13,7 +15,8 @@ const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24
 const GUEST_TOKEN_LIFETIME = SECONDS_IN_HOUR * 3 // 3 hours
 
-const {queryObjects, runQuery, database} = require('./controllers/register.controller');
+
+const {queryObjects, runQuery, getQuery, allQuery, database} = require('./controllers/register.controller');
 const db = database;
 //helper functions for SQL queries. Assume the user is already authenticated for such actions
 
@@ -288,20 +291,29 @@ function checkUserCredentials(req, res, next) {
   });
   //next(); //do not next
 }
-function decodeToken (req, res, next) { //token validator and decoder middleware
+async function decodeToken (req, res, next) { //token validator and decoder middleware
   const incomingToken = req.get('Authorization');
   console.log(incomingToken)
-  //check token validity
-  jwt.verify(incomingToken, publicKey, function(err, decoded) {
-    //console.log(decoded)
-    if (err) {
-      res.status(400).json(err) //could be wrong token, expired token...
-      return;
-    }
-    else {
-      res.locals.decoded = decoded;
-    }
-  })
+  //check if token is in db
+  const isTokenInDB = await Session.isTokenInDB(incomingToken);
+  if (isTokenInDB) {
+    //check token validity
+    jwt.verify(incomingToken, publicKey, function(err, decoded) {
+        //console.log(decoded)
+        if (err) {
+            Session.deleteToken(incomingToken); //expire the token
+            res.status(400).json(err)
+            return;
+        }
+        else { //OK
+            res.locals.decoded = decoded;
+        }
+    })
+  }
+  else {
+        const error = "Token not in DB";
+        return res.status(400).json(error) //could be wrong token, expired token...
+  }
   next();
 }
 function transpose(array) { //transposes vertical to horizontal (array of arrays, into a single array). Only works on single column
@@ -337,6 +349,23 @@ class Session { //handles tokens and user sessions
             return new Session(accountID, tokens);
         });
     }*/
+    static async isTokenInDB(token) {
+        const sql = `SELECT token, expiry FROM Session WHERE token = ?`;
+        let result = null;
+        try {
+            result = await getQuery(sql, [token]);
+            if (result) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (error) {
+            console.log("Could not check token, due to sql error.", error.message);
+            return false;
+        }
+    }
     static saveToken(accountID, token, guest=false) { //save the token, used with login and authentication for persistence //working
         accountID = parseInt(accountID);
         if (accountID == NaN) {
