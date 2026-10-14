@@ -74,7 +74,7 @@ class Food {
             return {validationErrors: validationErrors.join('\n')};
         }
     }
-    static preprocessFoodRow(array) { //converts to dollars and cents and converts image name to static ref
+    static async preprocessFoodRow(array) { //converts to dollars and cents and converts image name to static ref
         for (let i = 0; i < array.length; i++) {
             array[i].imageLink = Food.appendImageDirectory(array[i].imageLink)
             array[i].price /= 100;
@@ -102,7 +102,7 @@ class Food {
             return;
         }
         //convert price to dollars and cents and href
-        result = Food.preprocessFoodRow(result);
+        result = await Food.preprocessFoodRow(result);
         res.locals.foodList = result;
         next();
     }

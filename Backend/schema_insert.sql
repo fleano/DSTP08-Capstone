@@ -8,3 +8,5 @@ INSERT INTO Role (id, name)
 VALUES (0, "Admin"), (-1, "Guest");
 INSERT INTO FoodCategory (category)
 VALUES ("Other"), ("Beverages"), ("Food"), ("Set Meals"), ("Appetisers"), ("Mains");
+INSERT INTO Food (name, description, imageLink, price, discountedPrice, foodCategory, enabled, available, featured)
+VALUES ("Fried Chicken", "It's delicious", "1791950117656-stock-of-fried-chicken-foodgraphy-ai-generated-photo.jpg", 750, null, 2, 1, 1, 1)
