@@ -1,10 +1,16 @@
 import { useState } from "react";
+import PriceTag from "./PriceTag.jsx";
+import { getFinalPrice, getBadgeText } from "./priceHelper.js";
 import "./App.css";
 
 // One dish on the menu page. Works like CartItem: + and - buttons and a total
 function MenuItemCard({ item, onAdd }) {
     const [quantity, setQuantity] = useState(1);
     const [addedMessage, setAddedMessage] = useState("");
+
+    // Items are available unless the backend says available: false
+    const isAvailable = item.available !== false;
+    const badge = isAvailable ? getBadgeText(item) : "";
 
     const handleIncrease = () => {
         setQuantity(prevQuantity => prevQuantity + 1);
@@ -22,34 +28,36 @@ function MenuItemCard({ item, onAdd }) {
         setTimeout(() => setAddedMessage(""), 1500);
     };
 
-    // Total price for the chosen quantity
-    const totalPrice = (quantity * Number(item.price)).toFixed(2);
+    // Total price for the chosen quantity (uses the special / discount price)
+    const totalPrice = (quantity * getFinalPrice(item)).toFixed(2);
 
     return (
-        <div className="food-card">
+        <div className={isAvailable ? "food-card" : "food-card unavailable"}>
             <div className="food-image-placeholder">
                 {item.image ? (
                     <img src={item.image} alt={item.name} />
                 ) : (
                     <span className="dish-icon">🥡</span>
                 )}
+                {badge !== "" && <span className="sale-badge">{badge}</span>}
+                {!isAvailable && <span className="soldout-badge">Sold Out</span>}
             </div>
 
             <div className="food-info">
                 <h3>{item.name}</h3>
                 <p className="food-description">{item.description}</p>
-                <p className="food-price">${Number(item.price).toFixed(2)} each</p>
+                <p className="menu-card-price"><PriceTag item={item} /> each</p>
 
                 <div className="quantity-controls">
                     <button
                         onClick={handleDecrease}
-                        disabled={quantity === 1}
+                        disabled={quantity === 1 || !isAvailable}
                         className="qty-btn"
                     >
                         -
                     </button>
                     <span className="quantity-display">{quantity}</span>
-                    <button onClick={handleIncrease} className="qty-btn">
+                    <button onClick={handleIncrease} disabled={!isAvailable} className="qty-btn">
                         +
                     </button>
                 </div>
@@ -58,8 +66,8 @@ function MenuItemCard({ item, onAdd }) {
                     Total: <span className="food-price">${totalPrice}</span>
                 </p>
 
-                <button className="add-cart-btn" onClick={handleAdd}>
-                    Add to Cart
+                <button className="add-cart-btn" onClick={handleAdd} disabled={!isAvailable}>
+                    {isAvailable ? "Add to Cart" : "Unavailable"}
                 </button>
 
                 {addedMessage !== "" && <p className="added-message">{addedMessage}</p>}
