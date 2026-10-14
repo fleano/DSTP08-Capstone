@@ -8,9 +8,9 @@ const {Food, FoodCategory} = require("./food_objects")
 const router = Router();
 
 // Public Routes
-router.get("/test", FoodCategory.getAllFoodCategory, async (request, response) => {
+router.get("/test", Food.getAllFood, async (request, response) => {
   
-  response.status(200).json({ message: response.locals.foodCategoryResult });
+  response.status(200).json({ message: response.locals.foodList });
   //response.status(200).json({ message: "Test route is working!" });
 });
 

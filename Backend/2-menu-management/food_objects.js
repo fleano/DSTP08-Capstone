@@ -20,20 +20,20 @@ class Food {
         if (!descriptionValidation) {
             validationErrors.push("Description is invalid")
         }
-        const priceValidation = Number.isInteger(parseInt(price));
+        const priceValidation = !isNaN(parseFloat(price));
         console.log("priceValidation", priceValidation)
         if (!priceValidation) {
-            validationErrors.push("Price is invalid, must be int")
+            validationErrors.push("Price is invalid, must be number")
         }
-        const discountedPriceValidation = discountedPrice == null || Number.isInteger(parseInt(discountedPrice));
+        const discountedPriceValidation = discountedPrice == null || !isNaN(parseFloat(discountedPrice));
         if (!discountedPriceValidation) {
-            validationErrors.push("Discounted price is invalid, must be null or int")
+            validationErrors.push("Discounted price is invalid, must be null or number")
         }
         //convert to cents
         if (priceValidation) {
             price = Math.trunc(price * 100);
         }
-        if (discountedPriceValidation) {
+        if (discountedPriceValidation && discountedPrice != null) { //do not process if null
             discountedPrice = Math.trunc(discountedPrice * 100);
         }
         //
@@ -91,7 +91,7 @@ class Food {
         }
         //convert price to dollars and cents
         result = Food.convertDollarsandCents(result);
-        res.body.foodList = result;
+        res.locals.foodList = result;
         next();
     }
     static async getFoodByCategory(req, res, next) { //intended for filtering
@@ -112,7 +112,7 @@ class Food {
         }
         //convert price to dollars and cents
         result = Food.convertDollarsandCents(result);
-        res.body.foodList = result;
+        res.locals.foodList = result;
         next();
     }
 }
