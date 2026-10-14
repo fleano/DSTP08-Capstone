@@ -398,18 +398,33 @@ class Session { //handles tokens and user sessions
             return false;
         }
     }
-    static expireTokensByID(accountID) { //remove all tokens belonging to that user (purge logins)
+    static async getIDByToken(token) {
+        const sql = `SELECT accountID FROM Session WHERE token = ?`
+        let result;
+        try {
+            result = await getQuery(sql, [token]);
+            return result.accountID;
+        }
+        catch (error) {
+            return null;
+        }
+    }
+    static async expireTokensByID(accountID) { //remove all tokens belonging to that user (purge logins)
         accountID = parseInt(accountID);
-        if (accountID == NaN) {
+        if (accountID == NaN || accountID == null) {
             console.log("Could not expire tokens, accountID specified is invalid.");
             return false;
         }
         const sql = `DELETE FROM Session WHERE accountID = ?;`;
-        db.run(sql, [accountID], (err) => {
-            if (err) {
-                console.log("Error querying database for Session.");
-            }
-        })
+        let result;
+        try {
+            result = await runQuery(sql, [accountID]);
+            return true;
+        }
+        catch (error) {
+            console.log(error)
+            return false;
+        }
     }
     static pruneTokens() { //remove all expired tokens
         const sql = `DELETE FROM Session WHERE expiry <= ?;`

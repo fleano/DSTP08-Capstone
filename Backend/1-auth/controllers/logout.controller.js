@@ -7,7 +7,7 @@ const {Session} = require("../sql_objects.js")
  */
 async function logoutController(req, res, next) {
     const incomingToken = req.get('Authorization');
-    const result = Session.deleteToken(incomingToken);
+    const result = await Session.deleteToken(incomingToken);
     if (result) {
         return res.status(200).json({message: "Logout OK"});
     }
@@ -15,5 +15,18 @@ async function logoutController(req, res, next) {
         return res.status(400).json({message: "Logout failed"});
     }
 }
-
-module.exports = {logoutController}
+async function logoutControllerAll(req, res, next) {
+    const incomingToken = req.get('Authorization');
+    console.log(incomingToken)
+    const id = await Session.getIDByToken(incomingToken);
+    console.log(id)
+    const result = await Session.expireTokensByID(id);
+    console.log(result)
+    if (result) {
+        return res.status(200).json({message: "Logout OK"});
+    }
+    else {
+        return res.status(400).json({message: "Logout failed"});
+    }
+}
+module.exports = {logoutController, logoutControllerAll}
