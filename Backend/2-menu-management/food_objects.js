@@ -10,6 +10,7 @@ const db = database;
 
 class Food {
     static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0) {
+
         let validationErrors = []
         const nameValidation = (name != null) && (name.length > 0);
         if (!nameValidation) {
@@ -28,6 +29,14 @@ class Food {
         if (!discountedPriceValidation) {
             validationErrors.push("Discounted price is invalid, must be null or int")
         }
+        //convert to cents
+        if (priceValidation) {
+            price = Math.trunc(price * 100);
+        }
+        if (discountedPriceValidation) {
+            discountedPrice = Math.trunc(discountedPrice * 100);
+        }
+        //
         const foodCategoryValidation = Number.isInteger(parseInt(foodCategory))
         if (!foodCategoryValidation) {
             validationErrors.push("Food category is invalid, must be int")
@@ -59,17 +68,29 @@ class Food {
             return {validationErrors: validationErrors.join('\n')};
         }
     }
+    static convertDollarsandCents(array) {
+        for (let i = 0; i < array.length; i++) {
+            array[i].price /= 100;
+            if (array[i].discountedPrice != null) {
+                array[i].discountedPrice /= 100;
+            }
+        }
+        return array
+    }
     static async getAllFood(req, res, next) {
         const sql = `SELECT * FROM Food;`
         let result = []
         try {
             result = await allQuery(sql, []);
+
         }
         catch (error) {
             console.log(error);
             response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
             return;
         }
+        //convert price to dollars and cents
+        result = Food.convertDollarsandCents(result);
         res.body.foodList = result;
         next();
     }
@@ -89,6 +110,8 @@ class Food {
             response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
             return;
         }
+        //convert price to dollars and cents
+        result = Food.convertDollarsandCents(result);
         res.body.foodList = result;
         next();
     }
