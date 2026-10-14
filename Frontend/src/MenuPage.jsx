@@ -61,8 +61,9 @@ function MenuPage({ user, isGuest, categories, menuItems, loading, addToCart, on
                         <div key={cat.id} className="category-section">
                             <h3 className="category-title">{cat.name}</h3>
                             <div className="food-grid">
-                                {featuredItems.map((item) => (
-                                    <FoodCard
+                                {/* Changed from featuredItems to itemsInCategory, and FoodCard to MenuItemCard */}
+                                {itemsInCategory.map((item) => (
+                                    <MenuItemCard
                                         key={item.id}
                                         item={item} 
                                         onOrder={() => addToCart(item, 1)}

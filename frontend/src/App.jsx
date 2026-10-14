@@ -61,16 +61,31 @@ function App() {
     useEffect(() => {
         async function loadMenu() {
             try {
-                const categoryResponse = await fetch("/api/categories");
-                const menuResponse = await fetch("/api/menu");
+                const menuResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/menu/all`);
 
-                if (categoryResponse.ok && menuResponse.ok) {
-                    const categoryData = await categoryResponse.json();
+                if (menuResponse.ok) {
                     const menuData = await menuResponse.json();
 
-                    setCategories(categoryData);
-                    setMenuItems(menuData.map((item) => ({ ...item, id: item.id || item._id })));
+                    // Use your static category array for the filter buttons
+                    setCategories(mockCategories);
+
+                    // Extract and normalize menu items from menuData.message
+                    const rawItems = menuData.message || [];
+                    const normalizedItems = rawItems.map((item) => ({
+                        ...item,
+                        id: item.id || item._id,
+                        // Map backend 'imageLink' to frontend 'image' with full URL
+                        image: item.imageLink ? `${import.meta.env.VITE_API_BASE_URL}/${item.imageLink}` : null,
+                        // Map backend 'foodCategory' ID to frontend 'category'
+                        category: item.foodCategory,
+                        // Convert integer flags (1/0) to booleans
+                        available: item.available === 1,
+                        enabled: item.enabled === 1,
+                    }));
+
+                    setMenuItems(normalizedItems);
                 } else {
+                    console.error("Failed to fetch menu, status:", menuResponse.status);
                     setCategories(mockCategories);
                     setMenuItems(mockMenuItems);
                 }
@@ -115,7 +130,7 @@ function App() {
 
     async function handleLogout() {
         try {
-            await fetch("/auth/logout", { method: "POST" });
+            await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/logout`, { method: "POST" });
         } catch (err) {
             console.log("Logout request failed:", err);
         }

@@ -20,7 +20,7 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
             return;
         }
 
-        const url = isLogin ? "/auth/login" : "/auth/register";
+        const url = isLogin ? `${import.meta.env.VITE_API_BASE_URL}/auth/login` : `${import.meta.env.VITE_API_BASE_URL}/auth/register`;
 
         // Build request body conditionally
         const requestBody = isLogin
