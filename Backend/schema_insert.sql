@@ -7,4 +7,4 @@ VALUES ("Manager"), ("Staff"), ("Customer");
 INSERT INTO Role (id, name)
 VALUES (0, "Admin"), (-1, "Guest");
 INSERT INTO FoodCategory (category)
-VALUES ("Other"), ("Drink"), ("Food"), ("Set Meal");
+VALUES ("Other"), ("Beverages"), ("Food"), ("Set Meals"), ("Appetisers"), ("Mains");

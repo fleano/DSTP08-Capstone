@@ -1,17 +1,22 @@
 const { Router } = require("express");
 
-const { uploadFile } = require("./controllers/uploadFile.controller");
+const { uploadFileEnd, addFoodMiddleware } = require("./controllers/uploadFile.controller");
 const { upload } = require("./middleware");
+const { decodeToken } = require("../1-auth/sql_objects")
+const {Food, FoodCategory} = require("./food_objects")
 
 const router = Router();
 
 // Public Routes
-router.get("/test", async (request, response) => {
-  response.status(200).json({ message: "Test route is working!" });
+router.get("/test", FoodCategory.getAllFoodCategory, async (request, response) => {
+  
+  response.status(200).json({ message: response.locals.foodCategoryResult });
+  //response.status(200).json({ message: "Test route is working!" });
 });
 
 // Protected Routes
 
 // TODO: Add authentication middleware to protect this route
-router.post("/upload", upload.single("file"), uploadFile);
+//decodeToken is authentication middleware
+router.post("/upload", decodeToken, upload.single("file"), addFoodMiddleware, uploadFileEnd);
 module.exports = { menuRoutes: router };
