@@ -45,12 +45,27 @@ CREATE TABLE IF NOT EXISTS Food (
     FOREIGN KEY (foodCategory) REFERENCES FoodCategory(id)
 );
 CREATE TABLE IF NOT EXISTS FoodCart (
-    accountID INTEGER UNIQUE NOT NULL, --accepts either a registered user or a temporary guest user
-    items TEXT --stores as JSON - items: {foodID:, quantity:} --e.g. items: [{1, 5}] means ID 1, qty 5
+    accountID INTEGER NOT NULL, --accepts either a registered user or a temporary guest user
+    foodID INTEGER NOT NULL,
+    costPrice INTEGER NOT NULL, --declared as price at time of adding
+    quantity INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS OrderHistory ( --must include price
-    id INTEGER PRIMARY KEY AUTOINCREMENT, --order ID
-    orderDate INTEGER, --unix epoch
-    accountID INTEGER UNIQUE NOT NULL, 
-    items TEXT --stores as JSON - items: {foodID:, quantity:, price:} --e.g. items: [{1, 5, 200}] means ID 1, qty 5, $2.00
+    orderID INTEGER PRIMARY KEY AUTOINCREMENT, --order ID
+    orderDate INTEGER NOT NULL, --unix epoch
+    accountID INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS OrderHistoryItems(
+    orderID INTEGER NOT NULL,
+    foodID INTEGER NOT NULL,
+    costPrice INTEGER NOT NULL, --declared as price at time of adding
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (orderID) REFERENCES OrderHistory(orderID)
+);
+CREATE TABLE IF NOT EXISTS FoodCoupons( --if user orders 5 items in the history, give them a coupon?
+    accountID INTEGER NOT NULL,
+    foodID INTEGER NOT NULL,
+    discountPercent INTEGER NOT NULL,
+    FOREIGN KEY (accountID) REFERENCES Account(id),
+    FOREIGN KEY (foodID) REFERENCES Food(id)
 );
