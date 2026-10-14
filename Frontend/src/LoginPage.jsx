@@ -4,6 +4,7 @@ import "./App.css";
 function LoginPage({ onLogin, onBack, onGuest, notice }) {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -13,35 +14,37 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
         setError("");
         setSuccess("");
 
-        if (username === "" || password === "") {
-            setError("Please fill in all fields.");
+        // Validation: Username & password always needed. Email only needed for registration.
+        if (!username || !password || (!isLogin && !email)) {
+            setError("Please fill in all required fields.");
             return;
         }
 
-        // Sign In and Create Account use different backend routes
         const url = isLogin ? "/auth/login" : "/auth/register";
 
-        // Step 1: send the request
+        // Build request body conditionally
+        const requestBody = isLogin
+            ? { username: username, password: password }
+            : { username: username, email: email, password: password };
+
         let response;
         try {
             response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: username, password: password })
+                body: JSON.stringify(requestBody)
             });
         } catch (err) {
             setError("Cannot reach the server. Please try again later.");
             return;
         }
 
-        // Step 2: read the reply (it might not be JSON, so we check for that too)
         let data = {};
         try {
             data = await response.json();
         } catch (err) {
             console.log("Reply was not JSON. Status:", response.status);
         }
-        console.log("Response from backend:", response.status, data);
 
         if (!response.ok) {
             setError(data.message || "Request failed (status " + response.status + ").");
@@ -49,17 +52,18 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
         }
 
         if (isLogin) {
-            // Pass the logged in user back up to App
+            // Pass the logged-in user back up to App
             onLogin({
                 username: data.username || username,
-                name: data.username || username, // same as username, kept so other pages using user.name still work
+                name: data.username || username,
                 role: data.role
             });
         } else {
-            // Account created, send them to the Sign In tab
+            // Account created, switch them to the Sign In tab and clear fields
             setSuccess("Account created! Please sign in.");
             setIsLogin(true);
             setPassword("");
+            setEmail("");
         }
     }
 
@@ -111,6 +115,19 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
                             onChange={(e) => setUsername(e.target.value)}
                         />
                     </div>
+
+                    {/* Email field only appears when creating an account */}
+                    {!isLogin && (
+                        <div className="form-group">
+                            <label className="form-label">Email</label>
+                            <input
+                                className="form-input"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+                    )}
 
                     <div className="form-group">
                         <label className="form-label">Password</label>

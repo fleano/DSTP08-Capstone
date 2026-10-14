@@ -5,15 +5,22 @@ import MenuPage from "./MenuPage.jsx";
 import LoginPage from "./LoginPage.jsx";
 import AdminCreateAccount from "./AdminCreateAccount.jsx";
 import CartPanel from "./CartPanel.jsx";
+import ManageMenu from "./ManageMenu.jsx";
 import StaffDashboard from "./staff/StaffDashboard.jsx";
 import { mockCategories, mockMenuItems } from "./mockMenuData.js";
+import { getFinalPrice } from "./priceHelper.js";
 import "./App.css";
 
 function App() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [user, setUser] = useState(null);
+    // 1. Initialize user state by reading from localStorage
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem("restaurant_user");
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
+
     const [loginNotice, setLoginNotice] = useState("");
 
     // Menu data from the backend
@@ -25,9 +32,6 @@ function App() {
     const [cart, setCart] = useState([]);
     const [cartOpen, setCartOpen] = useState(false);
 
-    // Roles from the API: guest = -1, admin = 0, manager = 1, staff = 2, customer = 3
-    // The role might come back as a number (0), a text number ("0") or a word ("admin"),
-    // so we turn it into lowercase text first and check all of them
     function isStaffRole(role) {
         const r = String(role).toLowerCase();
         return (
@@ -41,6 +45,11 @@ function App() {
         return r === "0" || r === "admin" || r === "root";
     }
 
+    function isManagerPlusRole(role) {
+        const r = String(role).toLowerCase();
+        return r === "0" || r === "1" || r === "admin" || r === "root" || r === "manager";
+    }
+
     function isGuestRole(role) {
         const r = String(role).toLowerCase();
         return r === "-1" || r === "guest";
@@ -48,7 +57,7 @@ function App() {
 
     const isGuest = user !== null && isGuestRole(user.role);
 
-    // Get the categories and food items from the backend when the app first loads
+    // Get categories and food items from the backend
     useEffect(() => {
         async function loadMenu() {
             try {
@@ -60,7 +69,6 @@ function App() {
                     const menuData = await menuResponse.json();
 
                     setCategories(categoryData);
-                    // make sure every item has an id (some databases call it _id)
                     setMenuItems(menuData.map((item) => ({ ...item, id: item.id || item._id })));
                 } else {
                     setCategories(mockCategories);
@@ -86,8 +94,10 @@ function App() {
 
     function handleLogin(loggedInUser) {
         setUser(loggedInUser);
+        // Save user to localStorage for persistence on refresh
+        localStorage.setItem("restaurant_user", JSON.stringify(loggedInUser));
 
-        // Staff go to the dashboard, everyone else goes to the homepage
+        // Staff go to dashboard, others go to homepage
         if (isStaffRole(loggedInUser.role)) {
             navigate("/staff");
         } else {
@@ -96,12 +106,14 @@ function App() {
     }
 
     function handleGuest() {
-        setUser({ username: "Guest", name: "Guest", role: -1 });
+        const guestUser = { username: "Guest", name: "Guest", role: -1 };
+        setUser(guestUser);
+        // Save guest session as well if needed
+        localStorage.setItem("restaurant_user", JSON.stringify(guestUser));
         navigate("/");
     }
 
     async function handleLogout() {
-        // Tell the backend we are logging out too
         try {
             await fetch("/auth/logout", { method: "POST" });
         } catch (err) {
@@ -109,6 +121,8 @@ function App() {
         }
 
         setUser(null);
+        // Clear user from localStorage on logout
+        localStorage.removeItem("restaurant_user");
         setCart([]);
         navigate("/");
     }
@@ -116,10 +130,15 @@ function App() {
     // ---------- Cart ----------
 
     function addToCart(item, quantity) {
+        if (item.available === false) {
+            return;
+        }
+
+        const finalPrice = getFinalPrice(item);
+
         setCart((prevCart) => {
             const existing = prevCart.find((c) => c.id === item.id);
 
-            // Already in the cart? Just add to the quantity
             if (existing) {
                 return prevCart.map((c) =>
                     c.id === item.id ? { ...c, quantity: c.quantity + quantity } : c
@@ -149,7 +168,14 @@ function App() {
         setCart([]);
     }
 
-    // The cart button only shows on the customer pages
+    function updateMenuItem(updatedItem) {
+        setMenuItems((prevItems) =>
+            prevItems.map((item) =>
+                item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+            )
+        );
+    }
+
     const showCart = location.pathname === "/" || location.pathname === "/menu";
 
     return (
@@ -198,21 +224,32 @@ function App() {
                     }
                 />
 
-                {/* Only staff, managers and the admin can open the dashboard */}
                 <Route
                     path="/staff"
                     element={
                         user && isStaffRole(user.role) ? (
                             <div>
-                                {isAdminRole(user.role) && (
+                                {isManagerPlusRole(user.role) && (
                                     <div className="admin-bar">
-                                        <span>Logged in as {user.username} (admin)</span>
-                                        <button
-                                            className="admin-bar-btn"
-                                            onClick={() => navigate("/create-account")}
-                                        >
-                                            Create Account
-                                        </button>
+                                        <span>
+                                            Logged in as {user.username} ({isAdminRole(user.role) ? "admin" : "manager"})
+                                        </span>
+                                        <div>
+                                            <button
+                                                className="admin-bar-btn"
+                                                onClick={() => navigate("/manage-menu")}
+                                            >
+                                                Manage Menu
+                                            </button>
+                                            {isAdminRole(user.role) && (
+                                                <button
+                                                    className="admin-bar-btn"
+                                                    onClick={() => navigate("/create-account")}
+                                                >
+                                                    Create Account
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                                 <StaffDashboard user={user} onLogout={handleLogout} />
@@ -223,12 +260,28 @@ function App() {
                     }
                 />
 
-                {/* Only the admin (root) can open the create account page */}
                 <Route
                     path="/create-account"
                     element={
                         user && isAdminRole(user.role) ? (
                             <AdminCreateAccount onBack={() => navigate("/staff")} />
+                        ) : (
+                            <Navigate to="/" />
+                        )
+                    }
+                />
+
+                <Route
+                    path="/manage-menu"
+                    element={
+                        user && isManagerPlusRole(user.role) ? (
+                            <ManageMenu
+                                categories={categories}
+                                menuItems={menuItems}
+                                loading={loading}
+                                onItemUpdated={updateMenuItem}
+                                onBack={() => navigate("/staff")}
+                            />
                         ) : (
                             <Navigate to="/" />
                         )
