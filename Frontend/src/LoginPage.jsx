@@ -34,6 +34,29 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestBody)
             });
+
+            // Check if the server responded with an error status
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Authentication failed");
+            }
+            
+            console.log(response);
+            //console.log(response.body());
+            //console.log(response.json());
+            // Parse the JSON data from the response
+            const data = await response.json();
+            console.log(data);
+
+            // Adjust these property names based on how your backend structures its response 
+            // (e.g., data.user, data.roleId, etc.)
+            const loggedInUser = data.user || data;
+            const roleId = data.roleId || loggedInUser.roleId;
+
+            // Store the user object and roleId separately in localStorage
+            localStorage.setItem("restaurant_user", JSON.stringify(loggedInUser));
+            localStorage.setItem("roleId", roleId);
+
         } catch (err) {
             setError("Cannot reach the server. Please try again later.");
             return;
@@ -53,14 +76,15 @@ function LoginPage({ onLogin, onBack, onGuest, notice }) {
         }
 
         if (isLogin) {
+            // Ensure data.role or data.user.role corresponds to the roleId
+            console.log(data);
             const userRole = data.role !== undefined ? data.role : (data.user?.role ?? data.userRole);
             const userName = data.username || data.user?.username || username;
 
-            // Pass the correctly populated user back up to App
             onLogin({
                 username: userName,
                 name: userName,
-                role: userRole
+                role: userRole // e.g., 0 for root/admin, 1 for manager, etc.
             });
         } else {
             // Account created, switch them to the Sign In tab and clear fields

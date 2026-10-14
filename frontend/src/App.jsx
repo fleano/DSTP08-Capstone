@@ -33,26 +33,28 @@ function App() {
     const [cartOpen, setCartOpen] = useState(false);
 
     function isStaffRole(role) {
-        const r = String(role).toLowerCase();
-        return (
-            r === "0" || r === "1" || r === "2" ||
-            r === "admin" || r === "root" || r === "manager" || r === "staff"
-        );
+        console.log(role);
+        const r = Number(role);
+        // Returns true for Admin (0), Manager (1), Staff (2)
+        return r === 0 || r === 1 || r === 2;
     }
 
     function isAdminRole(role) {
-        const r = String(role).toLowerCase();
-        return r === "0" || r === "admin" || r === "root";
+        const r = Number(role);
+        // Returns true only for Admin / Root (0)
+        return r === 0;
     }
 
     function isManagerPlusRole(role) {
-        const r = String(role).toLowerCase();
-        return r === "0" || r === "1" || r === "admin" || r === "root" || r === "manager";
+        const r = Number(role);
+        // Returns true for Admin (0) and Manager (1)
+        return r === 0 || r === 1;
     }
 
     function isGuestRole(role) {
-        const r = String(role).toLowerCase();
-        return r === "-1" || r === "guest";
+        const r = Number(role);
+        // Returns true for Guest (-1)
+        return r === -1;
     }
 
     const isGuest = user !== null && isGuestRole(user.role);
@@ -78,7 +80,6 @@ function App() {
                         image: item.imageLink ? `${import.meta.env.VITE_API_BASE_URL}/${item.imageLink}` : null,
                         // Map backend 'foodCategory' ID to frontend 'category'
                         category: item.foodCategory,
-                        // Convert integer flags (1/0) to booleans
                         available: item.available === 1,
                         enabled: item.enabled === 1,
                     }));
@@ -109,11 +110,14 @@ function App() {
 
     function handleLogin(loggedInUser) {
         setUser(loggedInUser);
-        // Save user to localStorage for persistence on refresh
         localStorage.setItem("restaurant_user", JSON.stringify(loggedInUser));
 
+
+        console.log("before the if");
         // Staff go to dashboard, others go to homepage
+        console.log("123", loggedInUser);
         if (isStaffRole(loggedInUser.role)) {
+            console.log("this is ran");
             navigate("/staff");
         } else {
             navigate("/");
