@@ -16,8 +16,9 @@ const uploadFileCheck = (req, res, next) => {
 }*/
 async function addFoodMiddleware(req, res, next) { //wrapper
         const imageLink = req.file.path
-        res.locals.errors = await Food.addFood(req.body.name, req.body.description, imageLink, req.body.price, req.body.discountedPrice,
-            req.body.foodCategory, req.body.enabled, req.body.available
+        res.locals.errors = await Food.addFood(req.body.name, req.body.description, imageLink, 
+          req.body.price, req.body.discountedPrice, req.body.foodCategory, 
+          req.body.enabled, req.body.available, req.body.featured
         )
         if (res.locals.errors) {
           return res.status(400).json(res.locals.errors);

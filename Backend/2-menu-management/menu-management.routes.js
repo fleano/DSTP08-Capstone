@@ -13,6 +13,13 @@ router.get("/test", Food.getAllFood, async (request, response) => {
   response.status(200).json({ message: response.locals.foodList });
   //response.status(200).json({ message: "Test route is working!" });
 });
+router.get("/all", Food.getAllFood, async (request, response) => {
+  response.status(200).json({ message: response.locals.foodList });
+});
+router.get("/featured", Food.getAllFoodFeatured, async (request, response) => {
+  response.status(200).json({ message: response.locals.foodList });
+});
+
 
 // Protected Routes
 

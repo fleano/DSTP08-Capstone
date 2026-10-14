@@ -9,7 +9,7 @@ const db = database;
 //const { upload } = require('./middleware.js')
 
 class Food {
-    static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0) {
+    static async addFood(name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0, featured=0) {
 
         let validationErrors = []
         const nameValidation = (name != null) && (name.length > 0);
@@ -49,13 +49,19 @@ class Food {
         if (!availableValidation) {
             validationErrors.push("Available is invalid, must be 0 or 1")
         }
+        const featuredValidation = Number.isInteger(parseInt(featured)) && (featured == 0 || featured == 1);
+        if (!featuredValidation) {
+            validationErrors.push("Featured is invalid, must be 0 or 1")
+        }
         const sql = `INSERT INTO Food (name, description, imageLink, price, 
-        discountedPrice, foodCategory, enabled, available)
-        VALUES (?,?,?,?,?,?,?,?);`; //8 args
+        discountedPrice, foodCategory, enabled, available, featured)
+        VALUES (?,?,?,?,?,?,?,?,?);`; //9 args
         if (validationErrors.length == 0) {
             try {
-                const result = await runQuery(sql, [name, description, imageLink, price, 
-                    discountedPrice, foodCategory, enabled, available])
+                const result = await runQuery(sql, [
+                    name, description, imageLink, 
+                    price, discountedPrice, foodCategory, 
+                    enabled, available, featured])
                     return;
             }
             catch (error) {
@@ -79,6 +85,23 @@ class Food {
     }
     static async getAllFood(req, res, next) {
         const sql = `SELECT * FROM Food;`
+        let result = []
+        try {
+            result = await allQuery(sql, []);
+
+        }
+        catch (error) {
+            console.log(error);
+            response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
+            return;
+        }
+        //convert price to dollars and cents
+        result = Food.convertDollarsandCents(result);
+        res.locals.foodList = result;
+        next();
+    }
+    static async getAllFoodFeatured(req, res, next) {
+        const sql = `SELECT * FROM Food WHERE featured = 1;`
         let result = []
         try {
             result = await allQuery(sql, []);

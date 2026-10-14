@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS Food (
     foodCategory INTEGER DEFAULT 0,
     enabled INTEGER DEFAULT 0, --affects display of item
     available INTEGER DEFAULT 0, --affects if item is sold out or not
+    featured INTEGER DEFAULT 0, --affects if item is FEATURED on /featured
     FOREIGN KEY (foodCategory) REFERENCES FoodCategory(id)
 );
 CREATE TABLE IF NOT EXISTS FoodCart (
