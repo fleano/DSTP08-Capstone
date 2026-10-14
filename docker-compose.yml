@@ -3,17 +3,28 @@ services:
     build: ./backend
     ports:
       - "3000:3000"
+
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/uploads:/app/uploads
+
     networks:
       - app-network
+
+    # restart: unless-stopped
 
   frontend:
     build: ./frontend
     ports:
       - "5173:5173"
+
     depends_on:
       - backend
+
     networks:
       - app-network
+
+    # restart: unless-stopped
 
 networks:
   app-network:
