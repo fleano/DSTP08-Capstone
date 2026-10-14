@@ -15,7 +15,7 @@ const uploadFileCheck = (req, res, next) => {
   next();
 }*/
 async function addFoodMiddleware(req, res, next) { //wrapper
-        const imageLink = req.file.path
+        const imageLink = req.file.filename
         res.locals.errors = await Food.addFood(req.body.name, req.body.description, imageLink, 
           req.body.price, req.body.discountedPrice, req.body.foodCategory, 
           req.body.enabled, req.body.available, req.body.featured

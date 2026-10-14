@@ -74,14 +74,20 @@ class Food {
             return {validationErrors: validationErrors.join('\n')};
         }
     }
-    static convertDollarsandCents(array) {
+    static preprocessFoodRow(array) { //converts to dollars and cents and converts image name to static ref
         for (let i = 0; i < array.length; i++) {
+            array[i].imageLink = Food.appendImageDirectory(array[i].imageLink)
             array[i].price /= 100;
             if (array[i].discountedPrice != null) {
                 array[i].discountedPrice /= 100;
             }
         }
         return array
+    }
+    static appendImageDirectory(filename) {
+        // ?/uploads/foodImages/file.name
+        const dir = 'uploads/' + 'foodImages/' + filename;
+        return dir;
     }
     static async getAllFood(req, res, next) {
         const sql = `SELECT * FROM Food;`
@@ -95,8 +101,8 @@ class Food {
             response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
             return;
         }
-        //convert price to dollars and cents
-        result = Food.convertDollarsandCents(result);
+        //convert price to dollars and cents and href
+        result = Food.preprocessFoodRow(result);
         res.locals.foodList = result;
         next();
     }
@@ -112,8 +118,8 @@ class Food {
             response.status(409).json({ error: "Could not retrieve food items due to SQL error"});
             return;
         }
-        //convert price to dollars and cents
-        result = Food.convertDollarsandCents(result);
+        //convert price to dollars and cents and href
+        result = Food.preprocessFoodRow(result);
         res.locals.foodList = result;
         next();
     }
