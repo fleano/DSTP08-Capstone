@@ -8,8 +8,9 @@ const {Food, FoodCategory, FoodCart} = require("./food_objects")
 const router = Router();
 
 // Public Routes
+
 router.get("/test", Food.getAllFood, async (request, response) => {
-  
+
   response.status(200).json({ message: response.locals.foodList });
   //response.status(200).json({ message: "Test route is working!" });
 });
@@ -19,13 +20,16 @@ router.get("/all", Food.getAllFood, async (request, response) => {
 router.get("/featured", Food.getAllFoodFeatured, async (request, response) => {
   response.status(200).json({ message: response.locals.foodList });
 });
+
+// Some of these routes need token to be meaningful
 router.post("/cart", FoodCart.getCartByAccountID);
 router.post("/clearCart", FoodCart.clearCart);
 router.post("/checkout", FoodCart.checkout, FoodCart.clearCart);
-// Protected Routes
+router.put("/editCart", FoodCart.editFoodInCart);
 
-// TODO: Add authentication middleware to protect this route
-//decodeToken is authentication middleware
+// Protected Routes
+// Add authentication middleware to protect these routes
+// Session.adminPriviliege, Session.customerPriviliege, etc is authentication middleware
 router.post("/upload", Session.adminPrivilege, upload.single("file"), addFoodMiddleware, uploadFileEnd);
 router.put("/editFood", Session.adminPrivilege, upload.single("file"), editFoodMiddleware, uploadFileEnd);
 module.exports = { menuRoutes: router };

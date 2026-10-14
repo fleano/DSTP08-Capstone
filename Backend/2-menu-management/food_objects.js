@@ -50,16 +50,16 @@ class Food {
             return false;
         }
         if (isInDB) { //update
-            const sql2 = `UPDATE Food 
-            SET name = ?, description = ?, imageLink = ?, 
-            price = ?, discountedPrice = ?, foodCategory = ?, 
+            const sql2 = `UPDATE Food
+            SET name = ?, description = ?, imageLink = ?,
+            price = ?, discountedPrice = ?, foodCategory = ?,
             enabled = ?, available = ?, featured = ?
             WHERE id = ?;`
             let result;
             try {
-                result = await runQuery(sql2, [this.name, this.description, this.imageLink, 
-                    this.price, this.discountedPrice, this.foodCategory, 
-                    this.enabled, this.available, this.featured, 
+                result = await runQuery(sql2, [this.name, this.description, this.imageLink,
+                    this.price, this.discountedPrice, this.foodCategory,
+                    this.enabled, this.available, this.featured,
                     this.id]);
                 return true;
             }
@@ -75,7 +75,7 @@ class Food {
 
     }
     static async editFood(id, name, description, imageLink=null, price, discountedPrice=null, foodCategory=0, enabled=0, available=0, featured=0) {
-        
+
         let validationErrors = []
         let setQueries = []
         const idValidation = Number.isInteger(parseInt(foodCategory))
@@ -210,14 +210,14 @@ class Food {
         if (!featuredValidation) {
             validationErrors.push("Featured is invalid, must be 0 or 1")
         }
-        const sql = `INSERT INTO Food (name, description, imageLink, price, 
+        const sql = `INSERT INTO Food (name, description, imageLink, price,
         discountedPrice, foodCategory, enabled, available, featured)
         VALUES (?,?,?,?,?,?,?,?,?);`; //9 args
         if (validationErrors.length == 0) {
             try {
                 const result = await runQuery(sql, [
-                    name, description, imageLink, 
-                    price, discountedPrice, foodCategory, 
+                    name, description, imageLink,
+                    price, discountedPrice, foodCategory,
                     enabled, available, featured])
                     return;
             }
@@ -357,19 +357,6 @@ class FoodCart { //WIP
         }
         return FoodCart(accountID, orderItems);
     }
-    /*
-    async clearCart() {
-        const sql1 = `DELETE FROM FoodCart WHERE accountID = ?;`
-        try {
-            runQuery(sql1, [this.accountID]);
-            this.foodItems = []; //clear
-            return true;
-        }
-        catch (error) {
-            console.log(error);
-            return false
-        }
-    }*/
     static async clearCart(req, res, next) {
         const sql1 = `DELETE FROM FoodCart WHERE accountID = ?;`
         const accountID = Session.getIDByToken(req.get('Authorization'))
@@ -381,29 +368,6 @@ class FoodCart { //WIP
             return res.status(409).json({error: "Error deleting from FoodCart"})
         }
     }
-        /*
-    async checkout() {
-        if (this.foodItems.length == 0) {
-            console.log("Cannot checkout an empty foodcart");
-            return false;
-        }
-        //create a row in OrderHistory
-        const sql1 = `INSERT INTO OrderHistory (orderDate, accountID)
-        VALUES (?,?);`
-        //select this row
-        const sql2 = `SELECT orderID FROM OrderHistory ORDER BY orderID DESC LIMIT 1;`
-        const orderID = result.orderID
-        //create rows in OrderHistoryItems for each item in this.foodItems
-        let values = []
-        for (item of this.orderItems) {
-            values.push(`(${orderID}, ${item.foodID}, ${item.costPrice}, ${item.quantity})`); //sql bracket format
-        }
-        values = values.join(',');
-        const sql3 = `INSERT INTO OrderHistoryItems (orderID, foodID, costPrice, quantity)
-        VALUES ${values};`
-        //delete rows in FoodCart where accountID = this.accountID
-        this.clearCart();
-    }*/
     static async checkout(req, res, next) {
         //check FoodCart for items
         const sql0 = `SELECT * FROM FoodCart WHERE accountID = ?;`
@@ -448,9 +412,8 @@ class FoodCart { //WIP
             //clear cart after this!
         }
         catch (error) {
-
+            return res.status(409).json({error: "Error inserting into OrderHistoryItems"})
         }
-        //delete rows in FoodCart where accountID = this.accountID
     }
     static async getCartByAccountID(req, res, next) {
         let result = []
@@ -477,14 +440,53 @@ class FoodCart { //WIP
     static async editFoodInCart(req, res, next) {
         const accountID = await Session.getIDByToken(req.get('Authorization'));
         if (accountID == NaN || accountID == null) {
-            response.status(400).json({error: "Account ID is invalid, cannot retrieve food cart"})
+            res.status(400).json({error: "Account ID is invalid, cannot retrieve food cart"})
             return;
         }
-        //edit by foodID, quantity
+        //edit quantity
+        let validationErrors = []
+        const validateID = (req.body.id != null && Number.isInteger(parseInt(req.body.id)))
+        if (!validateID) {
+            validationErrors.push("Item (not Food) ID is not valid")
+        }
+        const validateQuantity = (req.body.quantity != null && Number.isInteger(parseInt(req.body.quantity) && parseInt(req.body.quantity) >= 0))
+        if (!validateQuantity) {
+            validationErrors.push("Quantity must be 0 or more")
+        }
+        let quantity = parseInt(req.body.quantity)
 
+        const sql1 = `UPDATE FoodCart
+        SET quantity = ? WHERE id = ?`
+        let result;
+        if (validateID && validateQuantity) {
+            try {
+                result = await runQuery(sql1, [req.body.quantity, req.body.id]) //row number of item in cart, not account
+            }
+            catch (error) {
+                res.status(400).json({error: "Error updating FoodCart"})
+                return;
+            }
+            FoodCart.pruneFoodCart(); //remove items with zero quantity
+        }
+        else {
+            res.status(400).json({error: validationErrors.join(",")})
+            return;
+        }
+        next();
+    }
+    static async pruneFoodCart() { //remove items with zero quantity
+        const sql1 = `DELETE FROM FoodCart
+        WHERE quantity = 0;`
+        try {
+            runQuery(sql1, [])
+        }
+        catch (error) {
+            console.log("Error pruning FoodCart")
+            return;
+        }
     }
     static async addFoodToCart(req, res, next) {
-        
+
         const accountID = await Session.getIDByToken(req.get('Authorization'));
         if (accountID == NaN || accountID == null) {
             response.status(400).json({error: "Account ID is invalid, cannot retrieve food cart"})
@@ -503,7 +505,7 @@ class FoodCart { //WIP
             return;
         }
 
-        const sql1 = `INSERT INTO FoodCart (accountID, foodID, costPrice, quantity) 
+        const sql1 = `INSERT INTO FoodCart (accountID, foodID, costPrice, quantity)
         VALUES (?,?,?,?);`;
         if (foodresult.discountedPrice != null) {
             res.locals.costPrice = foodresult.discountedPrice;
@@ -521,7 +523,7 @@ class FoodCart { //WIP
                 response.status(409).json({ error: "Count not insert into food cart due to SQL error"});
                 return;
             }
-            
+
         }
         catch (error) {
             console.log(error);
