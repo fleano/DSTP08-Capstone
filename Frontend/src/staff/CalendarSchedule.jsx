@@ -19,8 +19,8 @@ export const CalendarSchedule = ({ user }) => {
     if (response.ok) {
       const scheduleData = await response.json();
       setCalendarSchedule(scheduleData)
-      console.log(scheduleData) //doesn't pull despite backend
-      console.log(calendarSchedule)
+      console.log(scheduleData)
+      console.log(calendarSchedule) //use state won't update until rerender, it's intended
     }
   }
   useEffect(() => {
