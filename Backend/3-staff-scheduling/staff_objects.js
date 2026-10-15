@@ -1,0 +1,21 @@
+const fs = require('fs'); //filesystem
+const path = require('path'); //file dir
+const {getQuery, runQuery, allQuery, database} = require('../1-auth/controllers/register.controller');
+const { isBooleanObject } = require('util/types');
+const db = database;
+//const multer  = require('mu
+
+class Schedule {
+    static async getSchedule(req, res, next) {
+        const sql1 = `SELECT * FROM Schedule;`
+        let result
+        try {
+            result = await allQuery(sql1, [])
+            res.locals.schedule = result;
+        }
+        catch (error) {
+            return res.status(400).json({error: "Could not query Schedule table"})
+        }
+        next();
+    }
+}
