@@ -32,8 +32,15 @@ export const AnalyticsDashboard = () => {
   useEffect(() => {
     async function loadAnalytics() {
       try {
+        const token = localStorage.getItem("token");
+
         const response = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/analytics/dashboard`,
+          {
+            headers: {
+              Authorization: token ? token : "",
+            },
+          },
         );
 
         if (!response.ok) {
