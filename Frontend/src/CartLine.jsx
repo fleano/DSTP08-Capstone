@@ -1,6 +1,5 @@
 import "./App.css";
 
-// One line inside the cart. Works like CartItem: + and - buttons and a total
 function CartLine({ item, onChangeQuantity, onRemove }) {
     const lineTotal = (item.quantity * item.price).toFixed(2);
 
