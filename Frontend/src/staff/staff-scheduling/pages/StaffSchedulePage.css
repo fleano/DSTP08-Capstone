@@ -1,0 +1,182 @@
+.staff-schedule-page {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 5vw, 72px) 56px;
+  color: #202a2b;
+  background: #f3f5f2;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.staff-schedule-header,
+.staff-week-toolbar,
+.staff-week-controls,
+.staff-shift-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.staff-schedule-header {
+  max-width: 900px;
+  margin: 0 auto 38px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.staff-back-button {
+  margin: 0 0 34px;
+  padding: 0;
+  border: 0;
+  color: #42685a;
+  background: transparent;
+  cursor: pointer;
+  font:
+    600 13px "Segoe UI",
+    sans-serif;
+}
+.staff-schedule-eyebrow {
+  margin: 0 0 7px;
+  color: #587269;
+  font:
+    700 11px "Segoe UI",
+    sans-serif;
+}
+.staff-schedule-header h1 {
+  margin: 0;
+  color: #202a2b;
+  font-size: 38px;
+  font-weight: 500;
+}
+.staff-schedule-header > p:last-child {
+  margin-top: 9px;
+  color: #687472;
+  font:
+    15px "Segoe UI",
+    sans-serif;
+}
+.staff-week-toolbar {
+  max-width: 900px;
+  margin: 0 auto 15px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #d5ddd7;
+}
+.staff-week-toolbar h2 {
+  margin: 0;
+  color: #202a2b;
+  font:
+    500 21px Georgia,
+    serif;
+}
+.staff-week-toolbar span {
+  color: #687472;
+  font:
+    12px "Segoe UI",
+    sans-serif;
+}
+.staff-week-controls {
+  gap: 6px;
+}
+.staff-week-controls button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #c4d0c9;
+  border-radius: 3px;
+  color: #263d37;
+  background: transparent;
+  cursor: pointer;
+  font:
+    13px "Segoe UI",
+    sans-serif;
+}
+.staff-shift-list,
+.staff-schedule-empty {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.staff-shift-row {
+  min-height: 82px;
+  gap: 20px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dfe5e1;
+  background: #fff;
+}
+.staff-shift-row:first-child {
+  border-top: 1px solid #dfe5e1;
+}
+.staff-shift-date {
+  display: flex;
+  width: 100px;
+  flex-direction: column;
+  gap: 3px;
+}
+.staff-shift-date strong {
+  color: #263d37;
+  font:
+    700 12px "Segoe UI",
+    sans-serif;
+  text-transform: uppercase;
+}
+.staff-shift-date span,
+.staff-shift-details span {
+  color: #687472;
+  font:
+    13px "Segoe UI",
+    sans-serif;
+}
+.staff-shift-details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.staff-shift-details strong {
+  color: #202a2b;
+  font-size: 16px;
+  font-weight: 500;
+}
+.staff-shift-confirmed {
+  padding: 5px 8px;
+  color: #39765d;
+  background: #edf5ef;
+  font:
+    700 10px "Segoe UI",
+    sans-serif;
+  text-transform: uppercase;
+}
+.staff-schedule-empty {
+  padding: 40px 0;
+  border-top: 1px solid #dfe5e1;
+}
+.staff-schedule-empty h2 {
+  margin: 0 0 8px;
+  color: #202a2b;
+  font:
+    500 20px Georgia,
+    serif;
+}
+.staff-schedule-empty p {
+  color: #687472;
+  font:
+    14px/1.5 "Segoe UI",
+    sans-serif;
+}
+
+@media (max-width: 520px) {
+  .staff-schedule-header h1 {
+    font-size: 32px;
+  }
+  .staff-week-toolbar {
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: column;
+  }
+  .staff-shift-row {
+    gap: 10px;
+    padding-inline: 8px;
+  }
+  .staff-shift-date {
+    width: 68px;
+  }
+  .staff-shift-confirmed {
+    padding: 4px;
+    font-size: 8px;
+  }
+}
