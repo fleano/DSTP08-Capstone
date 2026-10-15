@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import Homepage from "./homepage.jsx";
 import MenuPage from "./MenuPage.jsx";
 import LoginPage from "./LoginPage.jsx";
@@ -13,369 +19,389 @@ import ManageAccounts from "./ManageAccounts.jsx";
 import "./App.css";
 
 function App() {
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    // 1. Initialize user state by reading from localStorage
-    const [user, setUser] = useState(() => {
-        try {
-            const savedUser = localStorage.getItem("restaurant_user");
-            console.log(savedUser);
-            if (!savedUser) {
-                const defaultGuest = { username: "Guest", name: "Guest", role: -1 };
-                localStorage.setItem("restaurant_user", JSON.stringify(defaultGuest));
-                return defaultGuest;
-            };
+  // 1. Initialize user state by reading from localStorage
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("restaurant_user");
+      console.log(savedUser);
+      if (!savedUser) {
+        const defaultGuest = { username: "Guest", name: "Guest", role: -1 };
+        localStorage.setItem("restaurant_user", JSON.stringify(defaultGuest));
+        return defaultGuest;
+      }
 
-            const parsed = JSON.parse(savedUser);
+      const parsed = JSON.parse(savedUser);
 
-            // Check if it's a valid non-empty object with a role or username
-            if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0 && (parsed.role !== undefined || parsed.username)) {
-                return parsed;
-            }
+      // Check if it's a valid non-empty object with a role or username
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        Object.keys(parsed).length > 0 &&
+        (parsed.role !== undefined || parsed.username)
+      ) {
+        return parsed;
+      }
 
-            // If it's an empty object {} or invalid, clean it up
-            localStorage.removeItem("restaurant_user");
-            return null;
-        } catch (err) {
-            localStorage.removeItem("restaurant_user");
-            return null;
-        }
-    });
-
-    const [loginNotice, setLoginNotice] = useState("");
-
-    // Menu data from the backend
-    const [categories, setCategories] = useState([]);
-    const [menuItems, setMenuItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    // Cart
-    const [cart, setCart] = useState([]);
-    const [cartOpen, setCartOpen] = useState(false);
-
-    function isStaffRole(role) {
-        const r = Number(role);
-        // Returns true for Admin (0), Manager (1), Staff (2)
-        return r === 0 || r === 1 || r === 2;
+      // If it's an empty object {} or invalid, clean it up
+      localStorage.removeItem("restaurant_user");
+      return null;
+    } catch (err) {
+      localStorage.removeItem("restaurant_user");
+      return null;
     }
+  });
 
-    function isAdminRole(role) {
-        const r = Number(role);
-        // Returns true only for Admin / Root (0)
-        return r === 0;
-    }
+  const [loginNotice, setLoginNotice] = useState("");
 
-    function isManagerPlusRole(role) {
-        const r = Number(role);
-        // Returns true for Admin (0) and Manager (1)
-        return r === 0 || r === 1;
-    }
+  // Menu data from the backend
+  const [categories, setCategories] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    function isGuestRole(role) {
-        const r = Number(role);
-        // Returns true for Guest (-1)
-        return r === -1;
-    }
+  // Cart
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
-    function addMenuItem(newItem) {
-        setMenuItems((prevItems) => [newItem, ...prevItems]);
-    }
+  function isStaffRole(role) {
+    const r = Number(role);
+    // Returns true for Admin (0), Manager (1), Staff (2)
+    return r === 0 || r === 1 || r === 2;
+  }
 
-    function removeMenuItem(deletedId) {
-        setMenuItems((prevItems) => prevItems.filter((item) => item.id !== deletedId));
-    }
+  function isAdminRole(role) {
+    const r = Number(role);
+    // Returns true only for Admin / Root (0)
+    return r === 0;
+  }
 
-    const isGuest = user !== null && isGuestRole(user.role);
+  function isManagerPlusRole(role) {
+    const r = Number(role);
+    // Returns true for Admin (0) and Manager (1)
+    return r === 0 || r === 1;
+  }
 
-    // Get categories and food items from the backend
-    useEffect(() => {
-        async function loadMenu() {
-            try {
-                const menuResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/menu/all`);
+  function isGuestRole(role) {
+    const r = Number(role);
+    // Returns true for Guest (-1)
+    return r === -1;
+  }
 
-                if (menuResponse.ok) {
-                    const menuData = await menuResponse.json();
+  function addMenuItem(newItem) {
+    setMenuItems((prevItems) => [newItem, ...prevItems]);
+  }
 
-                    // Use your static category array for the filter buttons
-                    setCategories(mockCategories);
-
-                    // Extract and normalize menu items from menuData.message
-                    const rawItems = menuData.message || [];
-                    const normalizedItems = rawItems.map((item) => ({
-                        ...item,
-                        id: item.id || item._id,
-                        // Map backend 'imageLink' to frontend 'image' with full URL
-                        image: item.imageLink ? `${import.meta.env.VITE_API_BASE_URL}/${item.imageLink}` : null,
-                        // Map backend 'foodCategory' ID to frontend 'category'
-                        category: item.foodCategory,
-                        available: item.available === 1,
-                        enabled: item.enabled === 1,
-                    }));
-
-                    setMenuItems(normalizedItems);
-                } else {
-                    console.error("Failed to fetch menu, status:", menuResponse.status);
-                    setCategories(mockCategories);
-                    setMenuItems(mockMenuItems);
-                }
-            } catch (err) {
-                console.log("Backend fetch failed, using mock data:", err);
-                setCategories(mockCategories);
-                setMenuItems(mockMenuItems);
-            }
-            setLoading(false);
-        }
-
-        loadMenu();
-    }, []);
-
-    // ---------- Login / logout ----------
-
-    function goToLogin(message) {
-        setLoginNotice(message);
-        navigate("/login");
-    }
-
-    function handleLogin(loggedInUser) {
-        setUser(loggedInUser);
-        localStorage.setItem("restaurant_user", JSON.stringify(loggedInUser));
-
-
-        // Staff go to dashboard, others go to homepage
-        if (isStaffRole(loggedInUser.role)) {
-            navigate("/staff");
-        } else {
-            navigate("/");
-        }
-    }
-
-
-    function handleGuest() {
-        const guestUser = { username: "Guest", name: "Guest", role: -1 };
-        setUser(guestUser);
-        // Save guest session as well if needed
-        localStorage.setItem("restaurant_user", JSON.stringify(guestUser));
-        navigate("/");
-    }
-
-    async function handleLogout() {
-        try {
-            await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/logout`, { method: "POST" });
-        } catch (err) {
-            console.log("Logout request failed:", err);
-        }
-
-        setUser(null);
-        // Clear user from localStorage on logout
-        localStorage.removeItem("restaurant_user");
-        localStorage.removeItem("token");
-        setCart([]);
-        navigate("/");
-    }
-
-    // ---------- Cart ----------
-
-    function addToCart(item, quantity) {
-        if (item.available === false) {
-            return;
-        }
-
-        // Members get the discounted price; guests and visitors pay the regular price
-        const finalPrice = getFinalPrice(item, user !== null && !isGuest);
-
-        setCart((prevCart) => {
-            const existing = prevCart.find((c) => c.id === item.id);
-
-            if (existing) {
-                return prevCart.map((c) =>
-                    c.id === item.id ? { ...c, quantity: c.quantity + quantity } : c
-                );
-            }
-
-            return [
-                ...prevCart,
-                { id: item.id, name: item.name, price: finalPrice, quantity: quantity }
-            ];
-        });
-    }
-
-    function changeQuantity(id, change) {
-        setCart((prevCart) =>
-            prevCart.map((c) =>
-                c.id === id ? { ...c, quantity: Math.max(1, c.quantity + change) } : c
-            )
-        );
-    }
-
-    function removeFromCart(id) {
-        setCart((prevCart) => prevCart.filter((c) => c.id !== id));
-    }
-
-    function clearCart() {
-        setCart([]);
-    }
-
-    function updateMenuItem(updatedItem) {
-        setMenuItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === updatedItem.id ? { ...item, ...updatedItem } : item
-            )
-        );
-    }
-
-    const showCart = location.pathname === "/" || location.pathname === "/menu";
-
-    return (
-        <div>
-            <Routes>
-                <Route
-                    path="/"
-                    element={
-                        <Homepage
-                            user={user}
-                            isGuest={isGuest}
-                            menuItems={menuItems}
-                            loading={loading}
-                            addToCart={addToCart}
-                            onNavigateToLogin={() => goToLogin("")}
-                            onLogout={handleLogout}
-                        />
-                    }
-                />
-
-                <Route
-                    path="/menu"
-                    element={
-                        <MenuPage
-                            user={user}
-                            isGuest={isGuest}
-                            categories={categories}
-                            menuItems={menuItems}
-                            loading={loading}
-                            addToCart={addToCart}
-                            onNavigateToLogin={() => goToLogin("")}
-                            onLogout={handleLogout}
-                        />
-                    }
-                />
-
-                <Route
-                    path="/login"
-                    element={
-                        <LoginPage
-                            notice={loginNotice}
-                            onLogin={handleLogin}
-                            onGuest={handleGuest}
-                            onBack={() => navigate("/")}
-                        />
-                    }
-                />
-
-                <Route
-                    path="/staff"
-                    element={
-                        user && isStaffRole(user.role) ? (
-                            <div>
-                                {isManagerPlusRole(user.role) && (
-                                    <div className="admin-bar">
-                                        <span>
-                                            Logged in as {user.username} ({isAdminRole(user.role) ? "admin" : "manager"})
-                                        </span>
-                                        <div>
-                                            <button
-                                                className="admin-bar-btn"
-                                                onClick={() => navigate("/manage-menu")}
-                                            >
-                                                Manage Menu
-                                            </button>
-
-                                            {/* Manage Accounts: Accessible by Manager Plus (Admins & Managers) */}
-                                            <button
-                                                className="admin-bar-btn"
-                                                onClick={() => navigate("/manage-accounts")}
-                                            >
-                                                Manage Accounts
-                                            </button>
-
-                                            {/* Create Account: By both Admin and managers Only */}
-                                            {isManagerPlusRole(user.role) && (
-                                                <button
-                                                    className="admin-bar-btn"
-                                                    onClick={() => navigate("/create-account")}
-                                                >
-                                                    Create Account
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                                <StaffDashboard user={user} onLogout={handleLogout} />
-                            </div>
-                        ) : (
-                            <Navigate to="/" />
-                        )
-                    }
-                />
-
-                <Route
-                    path="/create-account"
-                    element={
-                        user && isManagerPlusRole(user.role) ? (
-                            <AdminCreateAccount onBack={() => navigate("/staff")} />
-                        ) : (
-                            <Navigate to="/" />
-                        )
-                    }
-                />
-
-                <Route
-                    path="/manage-menu"
-                    element={
-                        user && isManagerPlusRole(user.role) ? (
-                            <ManageMenu
-                                categories={categories}
-                                menuItems={menuItems}
-                                loading={loading}
-                                onItemUpdated={updateMenuItem}
-                                onItemDeleted={removeMenuItem}
-                                onItemAdded={addMenuItem}
-                                onBack={() => navigate("/staff")}
-                            />
-                        ) : (
-                            <Navigate to="/" />
-                        )
-                    }
-                />
-
-                {/* 3. Added ManageAccounts Route */}
-                <Route
-                    path="/manage-accounts"
-                    element={
-                        user && isManagerPlusRole(user.role) ? (
-                            <ManageAccounts onBack={() => navigate("/staff")} />
-                        ) : (
-                            <Navigate to="/" />
-                        )
-                    }
-                />
-
-            </Routes>
-
-            {showCart && (
-                <CartPanel
-                    cart={cart}
-                    user={user}
-                    isOpen={cartOpen}
-                    onToggle={() => setCartOpen(!cartOpen)}
-                    onChangeQuantity={changeQuantity}
-                    onRemove={removeFromCart}
-                    onClearCart={clearCart}
-                    onNeedLogin={() => goToLogin("Please sign in or continue as a guest to check out.")}
-                />
-            )}
-        </div>
+  function removeMenuItem(deletedId) {
+    setMenuItems((prevItems) =>
+      prevItems.filter((item) => item.id !== deletedId),
     );
+  }
+
+  const isGuest = user !== null && isGuestRole(user.role);
+
+  // Get categories and food items from the backend
+  useEffect(() => {
+    async function loadMenu() {
+      try {
+        const token = localStorage.getItem("token");
+
+        const menuResponse = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/menu/account/all`,
+          {
+            headers: {
+              Authorization: token,
+            },
+          },
+        );
+
+        if (menuResponse.ok) {
+          const menuData = await menuResponse.json();
+
+          // Use your static category array for the filter buttons
+          setCategories(mockCategories);
+
+          // Extract and normalize menu items from menuData.message
+          const rawItems = menuData.message || [];
+          const normalizedItems = rawItems.map((item) => ({
+            ...item,
+            id: item.id || item._id,
+            // Map backend 'imageLink' to frontend 'image' with full URL
+            image: item.imageLink
+              ? `${import.meta.env.VITE_API_BASE_URL}/${item.imageLink}`
+              : null,
+            // Map backend 'foodCategory' ID to frontend 'category'
+            category: item.foodCategory,
+            available: item.available === 1,
+            enabled: item.enabled === 1,
+          }));
+
+          setMenuItems(normalizedItems);
+        } else {
+          console.error("Failed to fetch menu, status:", menuResponse.status);
+          setCategories(mockCategories);
+          setMenuItems(mockMenuItems);
+        }
+      } catch (err) {
+        console.log("Backend fetch failed, using mock data:", err);
+        setCategories(mockCategories);
+        setMenuItems(mockMenuItems);
+      }
+      setLoading(false);
+    }
+
+    loadMenu();
+  }, []);
+
+  // ---------- Login / logout ----------
+
+  function goToLogin(message) {
+    setLoginNotice(message);
+    navigate("/login");
+  }
+
+  function handleLogin(loggedInUser) {
+    setUser(loggedInUser);
+    localStorage.setItem("restaurant_user", JSON.stringify(loggedInUser));
+
+    // Staff go to dashboard, others go to homepage
+    if (isStaffRole(loggedInUser.role)) {
+      navigate("/staff");
+    } else {
+      navigate("/");
+    }
+  }
+
+  function handleGuest() {
+    const guestUser = { username: "Guest", name: "Guest", role: -1 };
+    setUser(guestUser);
+    // Save guest session as well if needed
+    localStorage.setItem("restaurant_user", JSON.stringify(guestUser));
+    navigate("/");
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/logout`, {
+        method: "POST",
+      });
+    } catch (err) {
+      console.log("Logout request failed:", err);
+    }
+
+    setUser(null);
+    // Clear user from localStorage on logout
+    localStorage.removeItem("restaurant_user");
+    localStorage.removeItem("token");
+    setCart([]);
+    navigate("/");
+  }
+
+  // ---------- Cart ----------
+
+  function addToCart(item, quantity) {
+    if (item.available === false) {
+      return;
+    }
+
+    // Members get the discounted price; guests and visitors pay the regular price
+    const finalPrice = getFinalPrice(item, user !== null && !isGuest);
+
+    setCart((prevCart) => {
+      const existing = prevCart.find((c) => c.id === item.id);
+
+      if (existing) {
+        return prevCart.map((c) =>
+          c.id === item.id ? { ...c, quantity: c.quantity + quantity } : c,
+        );
+      }
+
+      return [
+        ...prevCart,
+        { id: item.id, name: item.name, price: finalPrice, quantity: quantity },
+      ];
+    });
+  }
+
+  function changeQuantity(id, change) {
+    setCart((prevCart) =>
+      prevCart.map((c) =>
+        c.id === id ? { ...c, quantity: Math.max(1, c.quantity + change) } : c,
+      ),
+    );
+  }
+
+  function removeFromCart(id) {
+    setCart((prevCart) => prevCart.filter((c) => c.id !== id));
+  }
+
+  function clearCart() {
+    setCart([]);
+  }
+
+  function updateMenuItem(updatedItem) {
+    setMenuItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === updatedItem.id ? { ...item, ...updatedItem } : item,
+      ),
+    );
+  }
+
+  const showCart = location.pathname === "/" || location.pathname === "/menu";
+
+  return (
+    <div>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Homepage
+              user={user}
+              isGuest={isGuest}
+              menuItems={menuItems}
+              loading={loading}
+              addToCart={addToCart}
+              onNavigateToLogin={() => goToLogin("")}
+              onLogout={handleLogout}
+            />
+          }
+        />
+
+        <Route
+          path="/menu"
+          element={
+            <MenuPage
+              user={user}
+              isGuest={isGuest}
+              categories={categories}
+              menuItems={menuItems}
+              loading={loading}
+              addToCart={addToCart}
+              onNavigateToLogin={() => goToLogin("")}
+              onLogout={handleLogout}
+            />
+          }
+        />
+
+        <Route
+          path="/login"
+          element={
+            <LoginPage
+              notice={loginNotice}
+              onLogin={handleLogin}
+              onGuest={handleGuest}
+              onBack={() => navigate("/")}
+            />
+          }
+        />
+
+        <Route
+          path="/staff"
+          element={
+            user && isStaffRole(user.role) ? (
+              <div>
+                {isManagerPlusRole(user.role) && (
+                  <div className="admin-bar">
+                    <span>
+                      Logged in as {user.username} (
+                      {isAdminRole(user.role) ? "admin" : "manager"})
+                    </span>
+                    <div>
+                      <button
+                        className="admin-bar-btn"
+                        onClick={() => navigate("/manage-menu")}
+                      >
+                        Manage Menu
+                      </button>
+
+                      {/* Manage Accounts: Accessible by Manager Plus (Admins & Managers) */}
+                      <button
+                        className="admin-bar-btn"
+                        onClick={() => navigate("/manage-accounts")}
+                      >
+                        Manage Accounts
+                      </button>
+
+                      {/* Create Account: By both Admin and managers Only */}
+                      {isManagerPlusRole(user.role) && (
+                        <button
+                          className="admin-bar-btn"
+                          onClick={() => navigate("/create-account")}
+                        >
+                          Create Account
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <StaffDashboard user={user} onLogout={handleLogout} />
+              </div>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/create-account"
+          element={
+            user && isManagerPlusRole(user.role) ? (
+              <AdminCreateAccount onBack={() => navigate("/staff")} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/manage-menu"
+          element={
+            user && isManagerPlusRole(user.role) ? (
+              <ManageMenu
+                categories={categories}
+                menuItems={menuItems}
+                loading={loading}
+                onItemUpdated={updateMenuItem}
+                onItemDeleted={removeMenuItem}
+                onItemAdded={addMenuItem}
+                onBack={() => navigate("/staff")}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        {/* 3. Added ManageAccounts Route */}
+        <Route
+          path="/manage-accounts"
+          element={
+            user && isManagerPlusRole(user.role) ? (
+              <ManageAccounts onBack={() => navigate("/staff")} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+      </Routes>
+
+      {showCart && (
+        <CartPanel
+          cart={cart}
+          user={user}
+          isOpen={cartOpen}
+          onToggle={() => setCartOpen(!cartOpen)}
+          onChangeQuantity={changeQuantity}
+          onRemove={removeFromCart}
+          onClearCart={clearCart}
+          onNeedLogin={() =>
+            goToLogin("Please sign in or continue as a guest to check out.")
+          }
+        />
+      )}
+    </div>
+  );
 }
 
 export default App;
