@@ -5,13 +5,20 @@ import ContactFooter from "./ContactFooter.jsx";
 import "./App.css";
 
 function MenuPage({ user, isGuest, categories, menuItems, loading, addToCart, onNavigateToLogin, onLogout }) {
-    // "All" or the id of one category
     const [selectedCategory, setSelectedCategory] = useState("All");
+    const isLoggedIn = user !== null && !isGuest;
 
-    // Which categories to show (all of them, or just the chosen one)
     const shownCategories = categories.filter(
         (cat) => selectedCategory === "All" || String(cat.id) === String(selectedCategory)
     );
+
+    const validCategoryIds = new Set(categories.map((cat) => String(cat.id)));
+
+    // Find items that don't match ANY category in the categories array
+    const uncategorizedItems = menuItems.filter((item) => {
+        const itemCat = item.category ?? item.foodCategory;
+        return itemCat === undefined || itemCat === null || !validCategoryIds.has(String(itemCat));
+    });
 
     return (
         <div className="homepage-wrapper">
@@ -25,7 +32,7 @@ function MenuPage({ user, isGuest, categories, menuItems, loading, addToCart, on
             <section className="menu-section">
                 <h2 className="section-title">Our Menu</h2>
 
-                {/* Category buttons - the names come from the backend */}
+                {/* Category buttons */}
                 <div className="category-buttons">
                     <button
                         className={selectedCategory === "All" ? "category-btn active-category" : "category-btn"}
@@ -42,15 +49,25 @@ function MenuPage({ user, isGuest, categories, menuItems, loading, addToCart, on
                             {cat.name}
                         </button>
                     ))}
+                    {/* Optional: Add button for Uncategorized if any exist */}
+                    {uncategorizedItems.length > 0 && (
+                        <button
+                            className={selectedCategory === "Uncategorized" ? "category-btn active-category" : "category-btn"}
+                            onClick={() => setSelectedCategory("Uncategorized")}
+                        >
+                            Other / Uncategorized
+                        </button>
+                    )}
                 </div>
 
                 {loading && <p className="loading-text">Loading menu...</p>}
 
-                {/* One section for each category */}
-                {shownCategories.map((cat) => {
-                    const itemsInCategory = menuItems.filter(
-                        (item) => String(item.category) === String(cat.id)
-                    );
+                {/* Render items by category */}
+                {selectedCategory !== "Uncategorized" && shownCategories.map((cat) => {
+                    const itemsInCategory = menuItems.filter((item) => {
+                        const itemCat = item.category ?? item.foodCategory;
+                        return String(itemCat) === String(cat.id);
+                    });
 
                     // Skip categories with no dishes
                     if (itemsInCategory.length === 0) {
@@ -61,18 +78,35 @@ function MenuPage({ user, isGuest, categories, menuItems, loading, addToCart, on
                         <div key={cat.id} className="category-section">
                             <h3 className="category-title">{cat.name}</h3>
                             <div className="food-grid">
-                                {/* Changed from featuredItems to itemsInCategory, and FoodCard to MenuItemCard */}
                                 {itemsInCategory.map((item) => (
                                     <MenuItemCard
-                                        key={item.id}
+                                        key={item.id || item._id}
                                         item={item} 
-                                        onOrder={() => addToCart(item, 1)}
+                                        onAdd={addToCart}
+                                        isLoggedIn={isLoggedIn}
                                     />
                                 ))}
                             </div>
                         </div>
                     );
                 })}
+
+                {/* Render Uncategorized / Other Section */}
+                {(selectedCategory === "All" || selectedCategory === "Uncategorized") && uncategorizedItems.length > 0 && (
+                    <div className="category-section">
+                        <h3 className="category-title">Other Items</h3>
+                        <div className="food-grid">
+                            {uncategorizedItems.map((item) => (
+                                <MenuItemCard
+                                    key={item.id || item._id}
+                                    item={item} 
+                                    onAdd={addToCart}
+                                        isLoggedIn={isLoggedIn}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </section>
 
             <ContactFooter />

@@ -32,4 +32,16 @@ router.put("/editCart", FoodCart.editFoodInCart);
 // Session.adminPriviliege, Session.customerPriviliege, etc is authentication middleware
 router.post("/upload", Session.adminPrivilege, upload.single("file"), addFoodMiddleware, uploadFileEnd);
 router.put("/editFood", Session.adminPrivilege, upload.single("file"), editFoodMiddleware, uploadFileEnd);
+
+router.delete("/deleteFood", Session.managerPlusPrivilege, async (req, res) => {
+    const foodId = req.body.id;
+    const food = new Food(foodId);
+    const success = await food.deleteSelf();
+    if (success) {
+        return res.status(200).json({ message: "Food item deleted successfully" });
+    } else {
+        return res.status(500).json({ error: "Failed to delete food item" });
+    }
+});
+
 module.exports = { menuRoutes: router };
