@@ -33,6 +33,7 @@ async function getMenuController(request, response, next) {
       price: food.price / 100,
       discountedPrice:
         food.discountedPrice != null ? food.discountedPrice / 100 : null,
+      unitCost: food.unitCost != null ? food.unitCost / 100 : null,
     }));
 
     // Guest users

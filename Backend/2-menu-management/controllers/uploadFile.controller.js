@@ -3,7 +3,7 @@
  * @param {import('express').Request} request Incoming HTTP request.
  * @param {import('express').Response} response Outgoing HTTP response.
  */
-const {Food} = require("../food_objects");
+const { Food } = require("../food_objects");
 /*
 const uploadFileCheck = (req, res, next) => {
   console.log(req.file)
@@ -14,32 +14,50 @@ const uploadFileCheck = (req, res, next) => {
   }
   next();
 }*/
-async function editFoodMiddleware(req, res, next) { //needs id
-        const imageLink = req.file.filename
-        res.locals.errors = await Food.editFood(req.body.id, req.body.name, req.body.description, imageLink, 
-          req.body.price, req.body.discountedPrice, req.body.foodCategory, 
-          req.body.enabled, req.body.available, req.body.featured
-        )/*
+async function editFoodMiddleware(req, res, next) {
+  //needs id
+  const imageLink = req.file.filename;
+  res.locals.errors = await Food.editFood(
+    req.body.id,
+    req.body.name,
+    req.body.description,
+    imageLink,
+    req.body.price,
+    req.body.discountedPrice,
+    req.body.foodCategory,
+    req.body.enabled,
+    req.body.available,
+    req.body.featured,
+    req.body.unitCost,
+  ); /*
         if (res.locals.errors) {
           return res.status(201).json(res.locals.errors);
         }
         else {
           next();
         }*/
-        next();
+  next();
 }
-async function addFoodMiddleware(req, res, next) { //wrapper
-        const imageLink = req.file.filename
-        res.locals.errors = await Food.addFood(req.body.name, req.body.description, imageLink, 
-          req.body.price, req.body.discountedPrice, req.body.foodCategory, 
-          req.body.enabled, req.body.available, req.body.featured
-        )
-        if (res.locals.errors) {
-          return res.status(400).json(res.locals.errors);
-        }
-        else {
-          next();
-        }
+async function addFoodMiddleware(req, res, next) {
+  //wrapper
+  const imageLink = req.file.filename;
+  res.locals.errors = await Food.addFood(
+    req.body.name,
+    req.body.description,
+    imageLink,
+    req.body.price,
+    req.body.discountedPrice,
+    req.body.foodCategory,
+    req.body.enabled,
+    req.body.available,
+    req.body.featured,
+    req.body.unitCost,
+  );
+  if (res.locals.errors) {
+    return res.status(400).json(res.locals.errors);
+  } else {
+    next();
+  }
 }
 const uploadFileEnd = (req, res) => {
   //to be moved to uploadFileCheck
@@ -60,5 +78,7 @@ const uploadFileEnd = (req, res) => {
 };
 
 module.exports = {
-  uploadFileEnd, addFoodMiddleware, editFoodMiddleware
+  uploadFileEnd,
+  addFoodMiddleware,
+  editFoodMiddleware,
 };
