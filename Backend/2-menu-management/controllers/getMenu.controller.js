@@ -61,7 +61,16 @@ async function getMenuController(request, response, next) {
     );
 
     const couponMap = {};
+    console.log("Current account:", accountID);
 
+    coupons.forEach((coupon) => {
+      console.log(
+        "Coupon:",
+        coupon.accountID,
+        coupon.foodID,
+        coupon.discountPercent,
+      );
+    });
     coupons.forEach((coupon) => {
       couponMap[coupon.foodID] = coupon.discountPercent;
     });
