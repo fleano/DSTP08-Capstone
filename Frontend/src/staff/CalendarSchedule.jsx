@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 export const CalendarSchedule = ({ user }) => {
   const [value, onChange] = useState(new Date());
   const [calendarSchedule, setCalendarSchedule] = useState(new Array()); //pull the schedule and store it here
+  const [upcomingEventsString, setUpcomingEvents] = useState();
+  const [editNoteDialogVisibility, setEditNoteDialogVisibility] = useState(false);
+  const [editCurrentNoteDetails, setEditCurrentNoteDetails] = useState([]);
 
   async function getSchedule() {
     //e.preventDefault();
@@ -18,14 +21,36 @@ export const CalendarSchedule = ({ user }) => {
     });
     if (response.ok) {
       const scheduleData = await response.json();
-      setCalendarSchedule(scheduleData)
+      setCalendarSchedule(scheduleData.schedule)
       console.log(scheduleData)
       console.log(calendarSchedule) //use state won't update until rerender, it's intended
+      //add events to string diplay
+      let upcomingEvents = []
+      for (let day of scheduleData.schedule) {
+        if (day.date >= Date.now() / 1000 - 86400) {
+          const readableDate = new Date(day.date * 1000).toLocaleDateString("en-UK")
+          upcomingEvents.push(`${readableDate}: ${day.note}`);
+        }
+      }
+      if (upcomingEvents.length == 0) {
+        setUpcomingEvents("There are no upcoming events.")
+      }
+      else {
+        setUpcomingEvents(upcomingEvents.join('<br>')) //to fix line breaks
+      }
     }
   }
   useEffect(() => {
     getSchedule()
   }, [])
+
+  //on pressing a day button
+  function editDayNote(date) {
+    setEditNoteDialogVisibility(true);
+    console.log("Editdaynote date:", date)
+    //update the dialogs with note details if any
+    setEditCurrentNoteDetails({ readableDate: new Date(date).toLocaleDateString("en-UK"), note: "" })
+  }
 
   return (
     <div>
@@ -48,10 +73,23 @@ export const CalendarSchedule = ({ user }) => {
         >
           <h4>This Week's Shifts</h4>
           <p>Monday - Friday: 10:00 AM - 4:00 PM (Server Shift)</p>
+          {/*Upcoming Events*/}
+          <h4>Upcoming Events</h4>
+          <p>{upcomingEventsString}</p>
           {/*add calendar element here*/}
           <div>
-            <Calendar onChange={onChange} value={value} />
+            <Calendar onChange={onChange} value={value} onClickDay={(value, event) => editDayNote(value)} />
           </div>
+          <div hidden={!editNoteDialogVisibility}>
+            <br></br>
+            <br></br>
+            <form>
+              Date: <text name="readableDate" readOnly={true} value={editCurrentNoteDetails.readableDate}></text> <br></br><br></br>Note:<br></br>
+              <textarea name="note" defaultValue={editCurrentNoteDetails.note} rows="4" cols="40"></textarea>
+              <button type="Submit">Add Note</button>
+            </form>
+          </div>
+
         </div>
       </div>
     </div>

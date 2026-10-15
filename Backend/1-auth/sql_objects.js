@@ -364,8 +364,8 @@ class Session {
   constructor(accountID, tokens) {
     this.accountID = accountID;
     this.tokens = tokens; // [token, ...]
-  } 
-  
+  }
+
   /*
   static async checkPrivilege(req, res, next) {
     const incomingToken = req.get('Authorization');
@@ -400,7 +400,16 @@ class Session {
             return res.status(403).json({ error: "Access denied. Manager or Admin privilege required." });
         }
     }
-
+    static async staffManagerPrivilege(req, res, next) {
+        const incomingToken = req.get('Authorization');
+        const result = await Session.getRoleByToken(incomingToken);
+        const roleIDs = [0, 1, 2]
+        if (roleIDs.includes(result)) {
+            next();
+        } else {
+            return res.status(403).json({ error: "Access denied. Staff or Manager or Admin privilege required." });
+        }
+    }
 
   static async adminPrivilege(req, res, next) {
     const incomingToken = req.get('Authorization');

@@ -8,7 +8,7 @@ const {Schedule} = require("./staff_objects.js")
 router.get('/test', async (request, response, next) => {
     response.status(200).json({ message: 'Test route is working!' });
 });
-router.get('/getSchedule', Schedule.getSchedule, async (req, res, next) => {
+router.get('/getSchedule', Session.staffManagerPrivilege, Schedule.getSchedule, async (req, res, next) => {
     res.status(200).json({ schedule: res.locals.schedule });
 });
 module.exports = { schedulingRoutes: router };
