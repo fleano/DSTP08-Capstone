@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 export const CalendarSchedule = ({ user }) => {
   const [value, onChange] = useState(new Date());
   const [calendarSchedule, setCalendarSchedule] = useState(new Array()); //pull the schedule and store it here
-  const [upcomingEventsString, setUpcomingEvents] = useState();
+  const [upcomingEvents, setUpcomingEvents] = useState();
   const [editNoteDialogVisibility, setEditNoteDialogVisibility] = useState(false);
   const [editCurrentNoteDetails, setEditCurrentNoteDetails] = useState([]);
 
@@ -32,12 +32,8 @@ export const CalendarSchedule = ({ user }) => {
           upcomingEvents.push(`${readableDate}: ${day.note}`);
         }
       }
-      if (upcomingEvents.length == 0) {
-        setUpcomingEvents("There are no upcoming events.")
-      }
-      else {
-        setUpcomingEvents(upcomingEvents.join('<br>')) //to fix line breaks
-      }
+      //send the array down
+      setUpcomingEvents(upcomingEvents)
     }
   }
   useEffect(() => {
@@ -75,7 +71,9 @@ export const CalendarSchedule = ({ user }) => {
           <p>Monday - Friday: 10:00 AM - 4:00 PM (Server Shift)</p>
           {/*Upcoming Events*/}
           <h4>Upcoming Events</h4>
-          <p>{upcomingEventsString}</p>
+          <p>{Array.isArray(upcomingEvents) ? upcomingEvents.map((line, index) => (<li key={index}>{line}</li>))
+            : "There are no upcoming events."
+          }</p>
           {/*add calendar element here*/}
           <div>
             <Calendar onChange={onChange} value={value} onClickDay={(value, event) => editDayNote(value)} />
