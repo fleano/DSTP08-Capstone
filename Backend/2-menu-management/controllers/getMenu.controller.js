@@ -29,7 +29,7 @@ async function getMenuController(request, response, next) {
     // Convert cents to dollars and prepend image path
     foods = foods.map((food) => ({
       ...food,
-      imageLink: `/uploads/foodImages/${food.imageLink}`,
+      imageLink: `uploads/foodImages/${food.imageLink}`,
       price: food.price / 100,
       discountedPrice:
         food.discountedPrice != null ? food.discountedPrice / 100 : null,
