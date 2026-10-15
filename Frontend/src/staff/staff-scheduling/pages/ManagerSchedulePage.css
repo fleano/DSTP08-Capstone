@@ -30,6 +30,23 @@
   gap: 8px;
 }
 
+.schedule-page-error,
+.schedule-loading {
+  max-width: 1500px;
+  margin: 0 auto 16px;
+  padding: 12px 14px;
+  color: #8e382d;
+  background: #f9e9e5;
+  font:
+    14px "Segoe UI",
+    sans-serif;
+}
+
+.schedule-loading {
+  color: #587269;
+  background: transparent;
+}
+
 .schedule-eyebrow,
 .summary-label,
 .week-day-header span,

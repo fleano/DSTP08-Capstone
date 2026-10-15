@@ -21,6 +21,9 @@ const {
   schedulingRoutes,
 } = require("./3-staff-scheduling/staff-scheduling.routes");
 const {
+  initializeStaffSchedulingSchema,
+} = require("./3-staff-scheduling/schedule_schema");
+const {
   analyticsRoutes,
 } = require("./4-analystics-dashboard/analytics-dashboard.routes.js");
 
@@ -55,6 +58,16 @@ app.get("/health", (req, res) => {
   res.status(200).send("Ok");
 });
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running at http://localhost:${port}/`);
-});
+async function startServer() {
+  try {
+    await initializeStaffSchedulingSchema();
+    app.listen(port, "0.0.0.0", () => {
+      console.log(`Server running at http://localhost:${port}/`);
+    });
+  } catch (error) {
+    console.error("Could not initialize staff scheduling tables:", error);
+    process.exitCode = 1;
+  }
+}
+
+startServer();

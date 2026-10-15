@@ -158,6 +158,24 @@
     14px/1.5 "Segoe UI",
     sans-serif;
 }
+.staff-schedule-error {
+  max-width: 900px;
+  margin: 0 auto 14px;
+  padding: 12px 14px;
+  color: #8e382d;
+  background: #f9e9e5;
+  font:
+    14px "Segoe UI",
+    sans-serif;
+}
+.staff-schedule-loading {
+  max-width: 900px;
+  margin: 0 auto;
+  color: #587269;
+  font:
+    14px "Segoe UI",
+    sans-serif;
+}
 
 @media (max-width: 520px) {
   .staff-schedule-header h1 {

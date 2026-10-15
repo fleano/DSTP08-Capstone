@@ -1,29 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { addDays, getWeekStart, toDateKey } from "../scheduleData.js";
 import {
-  addDays,
-  getInitialShifts,
-  getWeekStart,
-  saveShifts,
-  toDateKey,
-} from "../scheduleData.js";
+  createScheduleShift,
+  deleteScheduleShift,
+  fetchScheduleShifts,
+  fetchStaffAccounts,
+  updateScheduleShift,
+} from "../scheduleApi.js";
 import "./ManagerSchedulePage.css";
 
 const ROLES = ["Server", "Host", "Cleaner", "Cook", "Cashier"];
-const STAFF = [
-  "Maya Chen",
-  "Luis Ortega",
-  "Avery Johnson",
-  "Sofia Patel",
-  "Noah Williams",
-  "Emma Thompson",
-];
-
 const EMPTY_SHIFT = {
   date: "",
   startTime: "09:00",
   endTime: "17:00",
-  staff: "",
+  staffId: "",
   role: "Server",
 };
 
@@ -32,12 +24,16 @@ const formatWeekday = (date) =>
 
 const ManagerSchedulePage = () => {
   const navigate = useNavigate();
-  const [shifts, setShifts] = useState(getInitialShifts);
+  const [shifts, setShifts] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [form, setForm] = useState(EMPTY_SHIFT);
   const [editingId, setEditingId] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [error, setError] = useState("");
+  const [pageError, setPageError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const weekDays = Array.from({ length: 7 }, (_, index) =>
     addDays(weekStart, index),
   );
@@ -46,11 +42,49 @@ const ManagerSchedulePage = () => {
     (shift) =>
       shift.date >= toDateKey(weekStart) && shift.date <= toDateKey(weekEnd),
   );
-  const coveredCount = weekShifts.filter((shift) => shift.staff).length;
+  const coveredCount = weekShifts.filter(
+    (shift) => shift.staffId != null,
+  ).length;
 
   useEffect(() => {
-    saveShifts(shifts);
-  }, [shifts]);
+    let cancelled = false;
+    Promise.all([
+      fetchScheduleShifts(
+        toDateKey(weekStart),
+        toDateKey(addDays(weekStart, 6)),
+      ),
+      fetchStaffAccounts(),
+    ])
+      .then(([loadedShifts, loadedStaff]) => {
+        if (cancelled) return;
+        setShifts(loadedShifts);
+        setStaff(loadedStaff);
+      })
+      .catch((loadError) => {
+        if (!cancelled) setPageError(loadError.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [weekStart]);
+
+  async function refreshShifts() {
+    const loadedShifts = await fetchScheduleShifts(
+      toDateKey(weekStart),
+      toDateKey(weekEnd),
+    );
+    setShifts(loadedShifts);
+  }
+
+  function goToWeek(nextWeek) {
+    setLoading(true);
+    setPageError("");
+    setWeekStart(nextWeek);
+  }
 
   function openCreateForm(date = toDateKey(weekStart)) {
     setEditingId(null);
@@ -65,38 +99,52 @@ const ManagerSchedulePage = () => {
       date: shift.date,
       startTime: shift.startTime,
       endTime: shift.endTime,
-      staff: shift.staff,
+      staffId: shift.staffId == null ? "" : String(shift.staffId),
       role: shift.role,
     });
     setError("");
     setFormOpen(true);
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     if (!form.date || form.endTime <= form.startTime) {
       setError("Choose a date and an end time later than the start time.");
       return;
     }
 
-    if (editingId) {
-      setShifts((current) =>
-        current.map((shift) =>
-          shift.id === editingId ? { ...shift, ...form } : shift,
-        ),
-      );
-    } else {
-      setShifts((current) => [
-        ...current,
-        { ...form, id: `shift-${Date.now()}` },
-      ]);
+    setSaving(true);
+    setError("");
+    setPageError("");
+    const shift = {
+      ...form,
+      staffId: form.staffId ? Number(form.staffId) : null,
+    };
+
+    try {
+      if (editingId) {
+        await updateScheduleShift(editingId, shift);
+      } else {
+        await createScheduleShift(shift);
+      }
+      await refreshShifts();
+      setFormOpen(false);
+      setEditingId(null);
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setSaving(false);
     }
-    setFormOpen(false);
-    setEditingId(null);
   }
 
-  function deleteShift(id) {
-    setShifts((current) => current.filter((shift) => shift.id !== id));
+  async function deleteShift(id) {
+    setPageError("");
+    try {
+      await deleteScheduleShift(id);
+      setShifts((current) => current.filter((shift) => shift.id !== id));
+    } catch (deleteError) {
+      setPageError(deleteError.message);
+    }
   }
 
   function formatWeekRange() {
@@ -129,6 +177,12 @@ const ManagerSchedulePage = () => {
           </button>
         </div>
       </header>
+
+      {pageError && (
+        <p className="schedule-page-error" role="alert">
+          {pageError}
+        </p>
+      )}
 
       <section
         className="schedule-summary"
@@ -220,14 +274,18 @@ const ManagerSchedulePage = () => {
             <label>
               Assign staff
               <select
-                value={form.staff}
+                value={form.staffId}
                 onChange={(event) =>
-                  setForm({ ...form, staff: event.target.value })
+                  setForm({ ...form, staffId: event.target.value })
                 }
               >
                 <option value="">Unassigned</option>
-                {STAFF.map((member) => (
-                  <option key={member}>{member}</option>
+                {staff.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {[member.firstName, member.lastName]
+                      .filter(Boolean)
+                      .join(" ") || member.username}
+                  </option>
                 ))}
               </select>
             </label>
@@ -244,8 +302,16 @@ const ManagerSchedulePage = () => {
               >
                 Cancel
               </button>
-              <button className="schedule-primary-button" type="submit">
-                {editingId ? "Save changes" : "Create shift"}
+              <button
+                className="schedule-primary-button"
+                type="submit"
+                disabled={saving}
+              >
+                {saving
+                  ? "Saving..."
+                  : editingId
+                    ? "Save changes"
+                    : "Create shift"}
               </button>
             </div>
           </form>
@@ -260,19 +326,19 @@ const ManagerSchedulePage = () => {
         <div className="week-controls">
           <button
             aria-label="Previous week"
-            onClick={() => setWeekStart(addDays(weekStart, -7))}
+            onClick={() => goToWeek(addDays(weekStart, -7))}
           >
             ‹
           </button>
           <button
             className="this-week-button"
-            onClick={() => setWeekStart(getWeekStart(new Date()))}
+            onClick={() => goToWeek(getWeekStart(new Date()))}
           >
             This week
           </button>
           <button
             aria-label="Next week"
-            onClick={() => setWeekStart(addDays(weekStart, 7))}
+            onClick={() => goToWeek(addDays(weekStart, 7))}
           >
             ›
           </button>
@@ -280,66 +346,74 @@ const ManagerSchedulePage = () => {
       </section>
 
       <section className="week-grid" aria-label="Weekly staff shifts">
-        {weekDays.map((date) => {
-          const dateKey = toDateKey(date);
-          const dayShifts = weekShifts
-            .filter((shift) => shift.date === dateKey)
-            .sort((first, second) =>
-              first.startTime.localeCompare(second.startTime),
-            );
-          const isToday = dateKey === toDateKey(new Date());
+        {loading ? (
+          <p className="schedule-loading" role="status">
+            Loading shifts...
+          </p>
+        ) : (
+          weekDays.map((date) => {
+            const dateKey = toDateKey(date);
+            const dayShifts = weekShifts
+              .filter((shift) => shift.date === dateKey)
+              .sort((first, second) =>
+                first.startTime.localeCompare(second.startTime),
+              );
+            const isToday = dateKey === toDateKey(new Date());
 
-          return (
-            <section
-              className={`week-day${isToday ? " is-today" : ""}`}
-              key={dateKey}
-            >
-              <header className="week-day-header">
-                <span>{formatWeekday(date)}</span>
-                <strong>{date.getDate()}</strong>
-              </header>
-              <div className="day-shifts">
-                {dayShifts.map((shift) => (
-                  <article
-                    className={`shift-card${shift.staff ? " is-covered" : " is-open"}`}
-                    key={shift.id}
-                  >
-                    <div className="shift-card-topline">
-                      <span>
-                        {shift.startTime}–{shift.endTime}
-                      </span>
-                      <span className="shift-status">
-                        {shift.staff ? "Covered" : "Open"}
-                      </span>
-                    </div>
-                    <strong>{shift.role}</strong>
-                    <span className="shift-assignee">
-                      {shift.staff || "Needs staff"}
-                    </span>
-                    <div className="shift-card-actions">
-                      <button onClick={() => openEditForm(shift)}>Edit</button>
-                      <button
-                        onClick={() => deleteShift(shift.id)}
-                        aria-label={`Delete ${shift.role} shift`}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </article>
-                ))}
-                {dayShifts.length === 0 && (
-                  <p className="empty-day">No shifts</p>
-                )}
-              </div>
-              <button
-                className="add-day-shift"
-                onClick={() => openCreateForm(dateKey)}
+            return (
+              <section
+                className={`week-day${isToday ? " is-today" : ""}`}
+                key={dateKey}
               >
-                <span aria-hidden="true">+</span> Add shift
-              </button>
-            </section>
-          );
-        })}
+                <header className="week-day-header">
+                  <span>{formatWeekday(date)}</span>
+                  <strong>{date.getDate()}</strong>
+                </header>
+                <div className="day-shifts">
+                  {dayShifts.map((shift) => (
+                    <article
+                      className={`shift-card${shift.staffId != null ? " is-covered" : " is-open"}`}
+                      key={shift.id}
+                    >
+                      <div className="shift-card-topline">
+                        <span>
+                          {shift.startTime}–{shift.endTime}
+                        </span>
+                        <span className="shift-status">
+                          {shift.staffId != null ? "Covered" : "Open"}
+                        </span>
+                      </div>
+                      <strong>{shift.role}</strong>
+                      <span className="shift-assignee">
+                        {shift.staff || "Needs staff"}
+                      </span>
+                      <div className="shift-card-actions">
+                        <button onClick={() => openEditForm(shift)}>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteShift(shift.id)}
+                          aria-label={`Delete ${shift.role} shift`}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                  {dayShifts.length === 0 && (
+                    <p className="empty-day">No shifts</p>
+                  )}
+                </div>
+                <button
+                  className="add-day-shift"
+                  onClick={() => openCreateForm(dateKey)}
+                >
+                  <span aria-hidden="true">+</span> Add shift
+                </button>
+              </section>
+            );
+          })
+        )}
       </section>
     </main>
   );
