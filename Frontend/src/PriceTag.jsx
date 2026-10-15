@@ -1,16 +1,16 @@
 import { getFinalPrice, hasDiscount } from "./priceHelper.js";
 import "./App.css";
 
-function PriceTag({ item }) {
+function PriceTag({ item, isLoggedIn = true }) {
     // Guard clause in case item is missing
     if (!item || item.price === undefined) {
         return <span className="food-price">$0.00</span>;
     }
 
     const originalPrice = Number(item.price);
-    const finalPrice = getFinalPrice(item);
+    const finalPrice = getFinalPrice(item, isLoggedIn);
 
-    if (hasDiscount(item)) {
+    if (hasDiscount(item, isLoggedIn)) {
         return (
             <span>
                 <span className="old-price">${originalPrice.toFixed(2)}</span>

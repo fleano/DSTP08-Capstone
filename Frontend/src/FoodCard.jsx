@@ -2,7 +2,7 @@ import PriceTag from "./PriceTag.jsx";
 import { getBadgeText } from "./priceHelper.js";
 import "./App.css";
 
-function FoodCard({ item, onOrder }) {
+function FoodCard({ item, onOrder, isLoggedIn = true }) {
     // Guard clause: if item is undefined or null, don't crash the app
     if (!item) {
         return null; 
@@ -10,7 +10,7 @@ function FoodCard({ item, onOrder }) {
 
     // Items are available unless the backend says available: false
     const isAvailable = item.available !== false;
-    const badge = isAvailable ? getBadgeText(item) : "";
+    const badge = isAvailable ? getBadgeText(item, isLoggedIn) : "";
 
     return (
         <div className={isAvailable ? "food-card" : "food-card unavailable"}>
@@ -27,7 +27,7 @@ function FoodCard({ item, onOrder }) {
                 <h3>{item.name}</h3>
                 <p className="food-description">{item.description}</p>
                 <div className="food-footer">
-                    <PriceTag item={item} />
+                    <PriceTag item={item} isLoggedIn={isLoggedIn} />
                     <button className="order-btn" onClick={onOrder} disabled={!isAvailable}>
                         {isAvailable ? "Order Now" : "Sold Out"}
                     </button>

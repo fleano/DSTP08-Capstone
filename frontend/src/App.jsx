@@ -74,6 +74,14 @@ function App() {
         return r === -1;
     }
 
+    function addMenuItem(newItem) {
+        setMenuItems((prevItems) => [newItem, ...prevItems]);
+    }
+
+    function removeMenuItem(deletedId) {
+        setMenuItems((prevItems) => prevItems.filter((item) => item.id !== deletedId));
+    }
+
     const isGuest = user !== null && isGuestRole(user.role);
 
     // Get categories and food items from the backend
@@ -157,6 +165,7 @@ function App() {
         setUser(null);
         // Clear user from localStorage on logout
         localStorage.removeItem("restaurant_user");
+        localStorage.removeItem("token");
         setCart([]);
         navigate("/");
     }
@@ -168,7 +177,8 @@ function App() {
             return;
         }
 
-        const finalPrice = getFinalPrice(item);
+        // Members get the discounted price; guests and visitors pay the regular price
+        const finalPrice = getFinalPrice(item, user !== null && !isGuest);
 
         setCart((prevCart) => {
             const existing = prevCart.find((c) => c.id === item.id);
@@ -181,7 +191,7 @@ function App() {
 
             return [
                 ...prevCart,
-                { id: item.id, name: item.name, price: Number(item.price), quantity: quantity }
+                { id: item.id, name: item.name, price: finalPrice, quantity: quantity }
             ];
         });
     }
@@ -284,8 +294,8 @@ function App() {
                                                 Manage Accounts
                                             </button>
 
-                                            {/* Create Account: Strictly Admin Only */}
-                                            {isAdminRole(user.role) && (
+                                            {/* Create Account: By both Admin and managers Only */}
+                                            {isManagerPlusRole(user.role) && (
                                                 <button
                                                     className="admin-bar-btn"
                                                     onClick={() => navigate("/create-account")}
@@ -307,7 +317,7 @@ function App() {
                 <Route
                     path="/create-account"
                     element={
-                        user && isAdminRole(user.role) ? (
+                        user && isManagerPlusRole(user.role) ? (
                             <AdminCreateAccount onBack={() => navigate("/staff")} />
                         ) : (
                             <Navigate to="/" />
@@ -324,6 +334,8 @@ function App() {
                                 menuItems={menuItems}
                                 loading={loading}
                                 onItemUpdated={updateMenuItem}
+                                onItemDeleted={removeMenuItem}
+                                onItemAdded={addMenuItem}
                                 onBack={() => navigate("/staff")}
                             />
                         ) : (
