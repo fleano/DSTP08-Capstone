@@ -1,12 +1,13 @@
 // src/staff/StaffDashboard.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../App.css";
 
-import { CalendarSchedule } from "./CalendarSchedule";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
 export default function StaffDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState("analytics"); // 'analytics' or 'schedule'
+  const navigate = useNavigate();
 
   // Helper to convert numeric role into a display string
   const getRoleDisplay = (role) => {
@@ -67,7 +68,7 @@ export default function StaffDashboard({ user, onLogout }) {
           </button>
           <button
             className={`tab-btn ${activeTab === "schedule" ? "active" : ""}`}
-            onClick={() => setActiveTab("schedule")}
+            onClick={() => navigate("/my-schedule")}
             style={{
               background: "none",
               border: "none",
@@ -93,8 +94,6 @@ export default function StaffDashboard({ user, onLogout }) {
         style={{ padding: "3rem 2rem", maxWidth: "1100px", margin: "0 auto" }}
       >
         {activeTab === "analytics" && <AnalyticsDashboard />}
-
-        {activeTab === "schedule" && <CalendarSchedule user={user} />}
       </div>
     </div>
   );

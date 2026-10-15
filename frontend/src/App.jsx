@@ -13,6 +13,8 @@ import AdminCreateAccount from "./AdminCreateAccount.jsx";
 import CartPanel from "./CartPanel.jsx";
 import ManageMenu from "./ManageMenu.jsx";
 import StaffDashboard from "./staff/StaffDashboard.jsx";
+import ManagerSchedulePage from "./staff/staff-scheduling/pages/ManagerSchedulePage.jsx";
+import StaffSchedulePage from "./staff/staff-scheduling/pages/StaffSchedulePage.jsx";
 import { mockCategories, mockMenuItems } from "./mockMenuData.js";
 import { getFinalPrice } from "./priceHelper.js";
 import ManageAccounts from "./ManageAccounts.jsx";
@@ -323,6 +325,13 @@ function App() {
                         Manage Accounts
                       </button>
 
+                      <button
+                        className="admin-bar-btn"
+                        onClick={() => navigate("/manage-schedule")}
+                      >
+                        Manage Schedule
+                      </button>
+
                       {/* Create Account: By both Admin and managers Only */}
                       {isManagerPlusRole(user.role) && (
                         <button
@@ -379,6 +388,31 @@ function App() {
           element={
             user && isManagerPlusRole(user.role) ? (
               <ManageAccounts onBack={() => navigate("/staff")} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/manage-schedule"
+          element={
+            user && isManagerPlusRole(user.role) ? (
+              <ManagerSchedulePage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/my-schedule"
+          element={
+            user && isStaffRole(user.role) ? (
+              <StaffSchedulePage
+                user={user}
+                onBack={() => navigate("/staff")}
+              />
             ) : (
               <Navigate to="/" />
             )
