@@ -19,6 +19,19 @@ class Schedule {
         }
         next();
     }
+    static async addNote(req, res, next) {
+        const sql1 = `INSERT INTO Schedule (date, note)
+        VALUES (?,?)`
+        let result
+        try {
+            result = await getQuery(sql1, [req.body.date, req.body.note])
+            res.status(201).json({message: "Added note successfully"})
+        }
+        catch (error) {
+            return res.status(400).json({error: "Could not query Schedule table"})
+        }
+        next();
+    }
 }
 
 module.exports = {Schedule}
