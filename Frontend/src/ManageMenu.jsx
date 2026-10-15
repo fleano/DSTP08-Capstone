@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import "./ManageMenu.css";
 
-function ManageMenu({ categories, menuItems, loading, onItemUpdated, onItemDeleted, onBack }) {
+function ManageMenu({ categories, menuItems, loading, onItemUpdated, onItemDeleted, onItemAdded, onBack }) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isCreatingNew, setIsCreatingNew] = useState(false);
 
-    // Get current category name
     function getCategoryName(item) {
         if (!item || !categories) return "No category";
         const category = categories.find((cat) => String(cat.id) === String(item.category));
@@ -16,89 +16,91 @@ function ManageMenu({ categories, menuItems, loading, onItemUpdated, onItemDelet
         return <div className="manage-menu-container"><p className="loading-text">Loading menu items...</p></div>;
     }
 
-    if (!menuItems || menuItems.length === 0) {
-        return (
-            <div className="manage-menu-container">
+    return (
+        <div className="manage-menu-container">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <button className="back-button" onClick={onBack}>
                     &larr; Back to dashboard
                 </button>
-                <p style={{ marginTop: "2rem", color: "#ebd9bd" }}>No menu items available to manage.</p>
+                {!isCreatingNew && (
+                    <button 
+                        className="admin-bar-btn" 
+                        style={{ background: "#4a2525", color: "#f7d070", padding: "8px 16px", cursor: "pointer", border: "1px solid #7a3535", borderRadius: "4px" }}
+                        onClick={() => setIsCreatingNew(true)}
+                    >
+                        + Add New Dish
+                    </button>
+                )}
             </div>
-        );
-    }
-
-    // Ensure index doesn't go out of bounds if an item is deleted
-    const safeIndex = currentIndex >= menuItems.length ? Math.max(0, menuItems.length - 1) : currentIndex;
-    const currentItem = menuItems[safeIndex] || {};
-
-    const handleNext = () => {
-        setCurrentIndex((prev) => (prev >= menuItems.length - 1 ? 0 : prev + 1));
-    };
-
-    const handlePrev = () => {
-        setCurrentIndex((prev) => (prev === 0 ? menuItems.length - 1 : prev - 1));
-    };
-
-    return (
-        <div className="manage-menu-container">
-            <button className="back-button" onClick={onBack} style={{ float: "left", marginBottom: "1rem" }}>
-                &larr; Back to dashboard
-            </button>
             <div style={{ clear: "both" }} />
 
             <div className="manage-menu-header">
-                <h2 className="manage-menu-title">🍽️ Manage Menu</h2>
+                <h2 className="manage-menu-title">{isCreatingNew ? "➕ Add New Menu Item" : "🍽️ Manage Menu"}</h2>
                 <p className="manage-menu-subtitle">
-                    Use the carousel arrows to switch dishes. Update details, toggle availability, change photos, or delete items.
+                    {isCreatingNew ? "Fill out the details below to add a new dish to the menu." : "Use the carousel arrows to switch dishes. Update details, toggle availability, change photos, or delete items."}
                 </p>
             </div>
 
-            <div className="carousel-card">
-                <div className="carousel-counter">
-                    Item {safeIndex + 1} of {menuItems.length}
-                </div>
-
-                <div className="carousel-display-row">
-                    <button className="carousel-arrow-btn" onClick={handlePrev}>
-                        &#10094;
-                    </button>
-
-                    <div className="carousel-slide-content">
-                        <ManageCarouselSlide 
-                            key={currentItem.id} 
-                            item={currentItem} 
-                            categoryName={getCategoryName(currentItem)}
-                            onItemUpdated={onItemUpdated}
-                            onItemDeleted={onItemDeleted}
-                        />
+            {isCreatingNew ? (
+                <ManageCarouselSlide 
+                    isNew={true}
+                    categories={categories}
+                    onCancel={() => setIsCreatingNew(false)}
+                    onItemAdded={(newItem) => {
+                        onItemAdded(newItem);
+                        setIsCreatingNew(false);
+                    }}
+                />
+            ) : menuItems.length === 0 ? (
+                <p style={{ marginTop: "2rem", color: "#ebd9bd" }}>No menu items available to manage.</p>
+            ) : (
+                <div className="carousel-card">
+                    <div className="carousel-counter">
+                        Item {currentIndex + 1} of {menuItems.length}
                     </div>
 
-                    <button className="carousel-arrow-btn" onClick={handleNext}>
-                        &#10095;
-                    </button>
-                </div>
+                    <div className="carousel-display-row">
+                        <button className="carousel-arrow-btn" onClick={() => setCurrentIndex((prev) => (prev === 0 ? menuItems.length - 1 : prev - 1))}>
+                            &#10094;
+                        </button>
 
-                {/* Indicator Dots */}
-                <div className="carousel-dots-container">
-                    {menuItems.map((_, index) => (
-                        <span
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`carousel-dot ${index === safeIndex ? "active" : "inactive"}`}
-                        />
-                    ))}
+                        <div className="carousel-slide-content">
+                            <ManageCarouselSlide 
+                                key={menuItems[currentIndex].id} 
+                                item={menuItems[currentIndex]} 
+                                categoryName={getCategoryName(menuItems[currentIndex])}
+                                categories={categories}
+                                onItemUpdated={onItemUpdated}
+                                onItemDeleted={onItemDeleted}
+                            />
+                        </div>
+
+                        <button className="carousel-arrow-btn" onClick={() => setCurrentIndex((prev) => (prev >= menuItems.length - 1 ? 0 : prev + 1))}>
+                            &#10095;
+                        </button>
+                    </div>
+
+                    <div className="carousel-dots-container">
+                        {menuItems.map((_, index) => (
+                            <span
+                                key={index}
+                                onClick={() => setCurrentIndex(index)}
+                                className={`carousel-dot ${index === currentIndex ? "active" : "inactive"}`}
+                            />
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
 
-// Sub-component that handles edits and deletion for the active carousel item
-function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted }) {
+function ManageCarouselSlide({ item = {}, categories = [], categoryName, onItemUpdated, onItemDeleted, isNew = false, onItemAdded, onCancel }) {
     const [name, setName] = useState(item.name || "");
     const [description, setDescription] = useState(item.description || "");
     const [price, setPrice] = useState(item.price || 0);
-    const [available, setAvailable] = useState(item.available !== false);
+    const [category, setCategory] = useState(item.category || (categories[0] ? categories[0].id : 3));
+    const [available, setAvailable] = useState(isNew ? true : item.available !== false);
     const [isSpecial, setIsSpecial] = useState(item.isSpecial || false);
     const [discountedPrice, setDiscountedPrice] = useState(item.discountedPrice || "");
     
@@ -110,17 +112,19 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    // Keep state in sync if parent item updates or carousel changes slide
     useEffect(() => {
-        setName(item.name || "");
-        setDescription(item.description || "");
-        setPrice(item.price || 0);
-        setAvailable(item.available !== false);
-        setIsSpecial(item.isSpecial || false);
-        setDiscountedPrice(item.discountedPrice || "");
-        setPreviewUrl(item.image || null);
-        setImageFile(null); 
-    }, [item]);
+        if (!isNew) {
+            setName(item.name || "");
+            setDescription(item.description || "");
+            setPrice(item.price || 0);
+            setCategory(item.category || 3);
+            setAvailable(item.available !== false);
+            setIsSpecial(item.isSpecial || false);
+            setDiscountedPrice(item.discountedPrice || "");
+            setPreviewUrl(item.image || null);
+            setImageFile(null);
+        }
+    }, [item, isNew]);
 
     function handleFileChange(e) {
         const file = e.target.files[0];
@@ -136,8 +140,8 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
         setError("");
         setSuccess("");
 
-        if (!imageFile && !item.image) {
-            setError("An image file is required to update this item.");
+        if (!imageFile && !isNew) {
+            setError("An image file is required.");
             setSaving(false);
             return;
         }
@@ -145,11 +149,13 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
         const token = localStorage.getItem("token");
         const formData = new FormData();
         
-        formData.append("id", item.id);
+        if (!isNew) {
+            formData.append("id", item.id);
+        }
         formData.append("name", name);
         formData.append("description", description || "No description provided");
         formData.append("price", price);
-        formData.append("foodCategory", item.category || 3);
+        formData.append("foodCategory", category);
         formData.append("enabled", "1");
         formData.append("available", available ? "1" : "0");
         formData.append("featured", isSpecial ? "1" : "0");
@@ -162,9 +168,12 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
             formData.append("file", imageFile);
         }
 
+        const endpoint = isNew ? "/menu/upload" : "/menu/editFood";
+        const method = isNew ? "POST" : "PUT";
+
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/menu/editFood`, {
-                method: "PUT",
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, {
+                method: method,
                 headers: {
                     "Authorization": token ? token : "",
                 },
@@ -174,28 +183,35 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || data.validationErrors || data.message || "Failed to update item.");
+                setError(data.error || data.validationErrors || data.message || "Failed to save item.");
                 setSaving(false);
                 return;
             }
 
-            const updatedImage = data.file && data.file.path
+            const savedImage = data.file && data.file.path
                 ? `${import.meta.env.VITE_API_BASE_URL}/${data.file.path}`
                 : previewUrl;
 
-            const updatedItem = {
-                ...item,
+            const savedItem = {
+                id: isNew ? (data.id || Date.now()) : item.id,
                 name: name,
                 description: description,
                 price: Number(price),
+                category: Number(category),
                 available: available,
                 isSpecial: isSpecial,
                 discountedPrice: isSpecial ? discountedPrice : null,
-                image: updatedImage
+                image: savedImage,
+                imageLink: data.file ? data.file.path : item.imageLink
             };
 
-            onItemUpdated(updatedItem);
-            setSuccess("Item updated successfully!");
+            if (isNew) {
+                setSuccess("Item added successfully!");
+                if (onItemAdded) onItemAdded(savedItem);
+            } else {
+                onItemUpdated(savedItem);
+                setSuccess("Item updated successfully!");
+            }
         } catch (err) {
             console.error("Save error:", err);
             setError("Cannot reach the server.");
@@ -203,20 +219,15 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
         setSaving(false);
     }
 
-    // Delete item handler
     async function handleDelete() {
-        if (!window.confirm(`Are you sure you want to delete "${item.name}"?`)) {
-            return;
-        }
+        if (!window.confirm(`Are you sure you want to delete "${item.name}"?`)) return;
 
         setDeleting(true);
         setError("");
-        setSuccess("");
-
         const token = localStorage.getItem("token");
 
         try {
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/menu/deleteFood`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/menu/deleteFood`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -233,10 +244,7 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
                 return;
             }
 
-            // Notify parent component to remove this item from state
-            if (onItemDeleted) {
-                onItemDeleted(item.id);
-            }
+            if (onItemDeleted) onItemDeleted(item.id);
         } catch (err) {
             console.error("Delete error:", err);
             setError("Cannot reach the server to delete item.");
@@ -256,15 +264,14 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
 
             <div className="file-upload-section">
                 <label className="upload-label">
-                    📷 {imageFile ? "Image Selected" : "Change Photo (Required)"}
-                    <input type="file" accept="image/*" onChange={handleFileChange} hidden />
+                    📷 {imageFile ? "Image Selected" : "Upload Photo (Required)"}
+                    <input type="file" accept="image/*" onChange={handleFileChange} hidden required={isNew} />
                 </label>
             </div>
 
             {error && <div className="error-message" style={{ whiteSpace: "pre-line" }}>{error}</div>}
             {success && <div className="success-message">{success}</div>}
 
-            {/* Editable Fields Grid */}
             <div className="edit-fields-grid" style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
                 <div className="field-group">
                     <label>Item Name</label>
@@ -285,6 +292,19 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
                         onChange={(e) => setDescription(e.target.value)}
                         style={{ width: "100%", padding: "6px 10px", background: "#2a1515", border: "1px solid #4a2525", color: "#f7d070", borderRadius: "4px" }}
                     />
+                </div>
+
+                <div className="field-group">
+                    <label>Category</label>
+                    <select 
+                        value={category} 
+                        onChange={(e) => setCategory(e.target.value)}
+                        style={{ width: "100%", padding: "6px 10px", background: "#2a1515", border: "1px solid #4a2525", color: "#f7d070", borderRadius: "4px" }}
+                    >
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -337,15 +357,20 @@ function ManageCarouselSlide({ item, categoryName, onItemUpdated, onItemDeleted 
                 </div>
             </div>
 
-            {/* Action Buttons */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem" }}>
                 <button type="submit" className="save-item-btn" disabled={saving || deleting}>
-                    {saving ? "Saving Changes..." : "💾 Save Changes"}
+                    {saving ? (isNew ? "Adding Item..." : "Saving Changes...") : (isNew ? "➕ Add Dish" : "💾 Save Changes")}
                 </button>
 
-                <button type="button" className="delete-item-btn" onClick={handleDelete} disabled={saving || deleting}>
-                    {deleting ? "Deleting Item..." : "🗑️ Delete Item"}
-                </button>
+                {isNew ? (
+                    <button type="button" className="delete-item-btn" onClick={onCancel} style={{ background: "#555" }}>
+                        Cancel
+                    </button>
+                ) : (
+                    <button type="button" className="delete-item-btn" onClick={handleDelete} disabled={saving || deleting}>
+                        {deleting ? "Deleting Item..." : "🗑️ Delete Item"}
+                    </button>
+                )}
             </div>
         </form>
     );
