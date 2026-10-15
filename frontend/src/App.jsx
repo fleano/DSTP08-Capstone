@@ -21,15 +21,19 @@ function App() {
         try {
             const savedUser = localStorage.getItem("restaurant_user");
             console.log(savedUser);
-            if (!savedUser) return null;
-            
+            if (!savedUser) {
+                const defaultGuest = { username: "Guest", name: "Guest", role: -1 };
+                localStorage.setItem("restaurant_user", JSON.stringify(defaultGuest));
+                return defaultGuest;
+            };
+
             const parsed = JSON.parse(savedUser);
-            
+
             // Check if it's a valid non-empty object with a role or username
             if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0 && (parsed.role !== undefined || parsed.username)) {
                 return parsed;
             }
-            
+
             // If it's an empty object {} or invalid, clean it up
             localStorage.removeItem("restaurant_user");
             return null;
@@ -145,7 +149,7 @@ function App() {
             navigate("/");
         }
     }
-    
+
 
     function handleGuest() {
         const guestUser = { username: "Guest", name: "Guest", role: -1 };
@@ -285,7 +289,7 @@ function App() {
                                             >
                                                 Manage Menu
                                             </button>
-                                            
+
                                             {/* Manage Accounts: Accessible by Manager Plus (Admins & Managers) */}
                                             <button
                                                 className="admin-bar-btn"
