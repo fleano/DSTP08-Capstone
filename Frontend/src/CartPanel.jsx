@@ -39,13 +39,20 @@ function CartPanel({ cart, user, isOpen, onToggle, onChangeQuantity, onRemove, o
         }
 
         // Only send the item ids and quantities - the backend works out the prices
-        const orderItems = cart.map((item) => ({ id: item.id, quantity: item.quantity }));
+        //const orderItems = cart.map((item) => ({ id: item.id, quantity: item.quantity }));
+
+        // 1) foodID, 2) costPrice, 3) quantity of food
+        const orderItems = cart.map((item) => ({
+            foodID: item.id,
+            costPrice: item.price,
+            quantity: item.quantity
+        }));
 
         setCheckingOut(true);
 
         let response;
         try {
-            response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders`, {
+            response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/menu/cart/checkout`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
