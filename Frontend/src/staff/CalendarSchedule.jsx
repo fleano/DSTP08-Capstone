@@ -1,8 +1,32 @@
 import Calendar from "react-calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const CalendarSchedule = ({ user }) => {
   const [value, onChange] = useState(new Date());
+  const [calendarSchedule, setCalendarSchedule] = useState(new Array()); //pull the schedule and store it here
+
+  async function getSchedule() {
+    //e.preventDefault();
+    // Retrieve the stored JWT token
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/scheduling/getSchedule`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token ? token : ""
+      }
+    });
+    if (response.ok) {
+      const scheduleData = await response.json();
+      setCalendarSchedule(scheduleData)
+      console.log(scheduleData) //doesn't pull despite backend
+      console.log(calendarSchedule)
+    }
+  }
+  useEffect(() => {
+    getSchedule()
+  }, [])
+
   return (
     <div>
       <h2 style={{ color: "#f7d070", marginBottom: "1.5rem" }}>

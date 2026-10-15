@@ -12,6 +12,7 @@ class Schedule {
         try {
             result = await allQuery(sql1, [])
             res.locals.schedule = result;
+            console.log(res.locals)
         }
         catch (error) {
             return res.status(400).json({error: "Could not query Schedule table"})
@@ -19,3 +20,5 @@ class Schedule {
         next();
     }
 }
+
+module.exports = {Schedule}
