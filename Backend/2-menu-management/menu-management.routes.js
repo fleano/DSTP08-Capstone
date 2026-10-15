@@ -35,6 +35,7 @@ router.post("/clearCart", FoodCart.clearCart);
 router.post("/checkout", FoodCart.checkout, FoodCart.clearCart);
 router.put("/editCart", FoodCart.editFoodInCart);
 
+
 // Protected Routes
 // Add authentication middleware to protect these routes
 // Session.adminPriviliege, Session.customerPriviliege, etc is authentication middleware
