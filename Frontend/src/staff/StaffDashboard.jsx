@@ -1,6 +1,7 @@
 // src/staff/StaffDashboard.jsx
 import React, { useState } from 'react';
 import '../App.css';
+import Calendar from 'react-calendar';
 
 export default function StaffDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'schedule'
@@ -15,7 +16,39 @@ export default function StaffDashboard({ user, onLogout }) {
   };
 
   const isManagerOrAdmin = Number(user.role) === 0 || Number(user.role) === 1;
+  {/*Calendar variables*/ }
+  const [modalVisibility, setmodalVisibility] = useState(false);
+  function setModalVisibility() {
+    setModalVisibility(true);
+  }
+  const [value, onChange] = useState(new Date());
+  function PopupGfg() {
 
+    return (
+      <div>
+        <h4>Popup - GeeksforGeeks</h4>
+        <Popup trigger=
+          {<button> Click to open modal </button>}
+          modal nested>
+          {
+            close => (
+              <div className='modal'>
+                <div className='content'>
+                  Welcome to GFG!!!
+                </div>
+                <div>
+                  <button onClick=
+                    {() => close()}>
+                    Close modal
+                  </button>
+                </div>
+              </div>
+            )
+          }
+        </Popup>
+      </div>
+    )
+  };
   return (
     <div className="homepage-wrapper">
       {/* Staff Top Navigation */}
@@ -24,21 +57,21 @@ export default function StaffDashboard({ user, onLogout }) {
           <span className="brand-icon">🛡️</span> Staff Portal ({getRoleDisplay(user.role)})
         </div>
         <div className="nav-links">
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
             style={{ background: 'none', border: 'none', color: '#ebd9bd', cursor: 'pointer' }}
           >
             Order Analytics
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
             onClick={() => setActiveTab('schedule')}
             style={{ background: 'none', border: 'none', color: '#ebd9bd', cursor: 'pointer' }}
           >
             Calendar & Scheduling
           </button>
-          
+
           <button className="nav-login-btn" onClick={onLogout} style={{ backgroundColor: '#a93226' }}>
             Logout ({user.name})
           </button>
@@ -69,6 +102,10 @@ export default function StaffDashboard({ user, onLogout }) {
               <div style={{ marginTop: '1rem', padding: '1rem', background: '#3d2222', borderRadius: '6px' }}>
                 <h4>This Week's Shifts</h4>
                 <p>Monday - Friday: 10:00 AM - 4:00 PM (Server Shift)</p>
+                {/*add calendar element here*/}
+                <div>
+                  <Calendar onChange={onChange} value={value} />
+                </div>
               </div>
             </div>
           </div>
