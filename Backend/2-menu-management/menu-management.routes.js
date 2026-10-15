@@ -8,6 +8,9 @@ const {
 const { upload } = require("./middleware");
 const { decodeToken, Session } = require("../1-auth/sql_objects");
 const { Food, FoodCategory, FoodCart } = require("./food_objects");
+const {
+  cartCheckoutController,
+} = require("./controllers/cartCheckout.controller");
 
 const router = Router();
 
@@ -23,6 +26,8 @@ router.get("/all", Food.getAllFood, async (request, response) => {
 router.get("/featured", Food.getAllFoodFeatured, async (request, response) => {
   response.status(200).json({ message: response.locals.foodList });
 });
+
+router.post("/cart/checkout", cartCheckoutController);
 
 // Some of these routes need token to be meaningful
 router.post("/cart", FoodCart.getCartByAccountID);
