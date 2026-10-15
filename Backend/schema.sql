@@ -69,3 +69,7 @@ CREATE TABLE IF NOT EXISTS FoodCoupons( --if user orders 5 items in the history,
     FOREIGN KEY (accountID) REFERENCES Account(id),
     FOREIGN KEY (foodID) REFERENCES Food(id)
 );
+CREATE TABLE IF NOT EXISTS Schedule(
+    date INTEGER NOT NULL, --unix epoch
+    note TEXT
+);
