@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require("fs")
 
 const { requestLogger } = require('./middleware/logger');
 const { corsMiddleware } = require('./middleware/cors');
@@ -16,8 +17,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const uploadsDirectory = path.join(__dirname, 'uploads', 'foodImages');
+const placeholderImage = path.join(__dirname, 'uploads', 'placeholder.jpg');
 app.use(corsMiddleware);
-app.use('/uploads/foodImages', express.static(uploadsDirectory));
+app.use('/uploads/foodImages', express.static(uploadsDirectory, {fallthrough:true}), (req, res) => {
+    //console.log(placeholderImage)
+    res.status(200).sendFile(placeholderImage);
+} )
 app.use(express.json());
 app.use(requestLogger);
 
