@@ -71,5 +71,5 @@ CREATE TABLE IF NOT EXISTS FoodCoupons( --if user orders 5 items in the history,
 );
 CREATE TABLE IF NOT EXISTS Schedule(
     date INTEGER NOT NULL, --unix epoch
-    note TEXT
+    note TEXT NOT NULL
 );

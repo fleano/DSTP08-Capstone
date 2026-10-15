@@ -1,7 +1,7 @@
 // src/staff/StaffDashboard.jsx
 import React, { useState } from "react";
 import "../App.css";
-import Calendar from "react-calendar";
+
 import { CalendarSchedule } from "./CalendarSchedule";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
@@ -20,11 +20,12 @@ export default function StaffDashboard({ user, onLogout }) {
   const isManagerOrAdmin = Number(user.role) === 0 || Number(user.role) === 1;
   {
     /*Calendar variables*/
-  }
+  } /*
   const [modalVisibility, setmodalVisibility] = useState(false);
   function setModalVisibility() {
     setModalVisibility(true);
   }
+
   const [value, onChange] = useState(new Date());
   function PopupGfg() {
     return (
@@ -42,7 +43,7 @@ export default function StaffDashboard({ user, onLogout }) {
         </Popup>
       </div>
     );
-  }
+  }*/
   return (
     <div className="homepage-wrapper">
       {/* Staff Top Navigation */}
