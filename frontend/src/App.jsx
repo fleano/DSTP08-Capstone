@@ -105,8 +105,15 @@ function App() {
   useEffect(() => {
     async function loadMenu() {
       try {
+        const token = localStorage.getItem("token");
+
         const menuResponse = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/menu/account/all`,
+          {
+            headers: {
+              Authorization: token,
+            },
+          },
         );
 
         if (menuResponse.ok) {
