@@ -13,7 +13,7 @@ function Navbar({ user, isGuest, onNavigateToLogin, onLogout }) {
                 {/* Logged in customers see Logout. Guests and visitors see Login */}
                 {user && !isGuest ? (
                     <div className="nav-user-section">
-                        <span>Hi, {user.name}</span>
+                        <span>Hi, {user.name || user.username}</span>
                         <button className="nav-login-btn" onClick={onLogout}>
                             Logout
                         </button>

@@ -7,6 +7,7 @@ import "./App.css";
 function Homepage({ user, isGuest, menuItems, loading, addToCart, onNavigateToLogin, onLogout }) {
     // Only show the first 6 dishes on the homepage
     const featuredItems = menuItems.slice(0, 6);
+    const isLoggedIn = user !== null && !isGuest;
 
     return (
         <div className="homepage-wrapper">
@@ -38,6 +39,7 @@ function Homepage({ user, isGuest, menuItems, loading, addToCart, onNavigateToLo
                             key={item.id}
                             item={item} 
                             onOrder={() => addToCart(item, 1)}
+                            isLoggedIn={isLoggedIn}
                         />
                     ))}
                 </div>

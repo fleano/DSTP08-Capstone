@@ -1,0 +1,237 @@
+.manage-menu-container {
+    padding: 2rem 1rem;
+    max-width: 750px;
+    margin: 0 auto;
+    text-align: center;
+    background-color: #1a0d0d; 
+    color: #ebd9bd;           
+    min-height: 100vh;         
+    box-sizing: border-box;
+}
+
+.manage-menu-title {
+    color: #f7d070;
+    font-size: 1.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.manage-menu-subtitle {
+    color: #ebd9bd;
+    font-size: 0.95rem;
+    opacity: 0.8;
+}
+
+.carousel-card {
+    background: #2a1515;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid #4a2525;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.carousel-counter {
+    color: #ebd9bd;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.carousel-display-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.carousel-arrow-btn {
+    background: #1a0d0d;
+    color: #f7d070;
+    border: 1px solid #4a2525;
+    font-size: 1.5rem;
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.carousel-arrow-btn:hover {
+    background: #3a1d1d;
+    border-color: #f7d070;
+}
+
+.carousel-slide-content {
+    flex: 1;
+}
+
+.carousel-image-window {
+    width: 100%;
+    height: 200px;
+    background: #1a0d0d;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #3a1d1d;
+}
+
+.carousel-menu-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-no-image {
+    color: #888;
+}
+
+/* File Upload Label */
+.file-upload-section {
+    margin-bottom: 0.8rem;
+}
+
+.upload-label {
+    background: #3a1d1d;
+    color: #ebd9bd;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid #4a2525;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.upload-label:hover {
+    background: #4a2525;
+    color: #f7d070;
+}
+
+.carousel-item-title {
+    color: #f7d070;
+    font-size: 1.3rem;
+    margin: 0.4rem 0 0.2rem 0;
+}
+
+.carousel-item-category {
+    color: #ebd9bd;
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-bottom: 1rem;
+}
+
+/* Edit Fields Grid */
+.edit-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    background: #1a0d0d;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #3a1d1d;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.field-group label {
+    display: block;
+    color: #ebd9bd;
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+}
+
+.field-group input[type="number"] {
+    width: 100%;
+    padding: 6px 10px;
+    background: #2a1515;
+    border: 1px solid #4a2525;
+    color: #f7d070;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* Save Button */
+.save-item-btn {
+    width: 100%;
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.save-item-btn:hover {
+    background: #219150;
+}
+
+.save-item-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.delete-item-btn {
+    width: 100%;
+    background: #a93226;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.delete-item-btn:hover {
+    background: #922b21; /* Slightly darker shade for hover */
+}
+
+.delete-item-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Indicator Dots */
+.carousel-dots-container {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4a2525;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.carousel-dot.active {
+    width: 24px;
+    border-radius: 5px;
+    background: #f7d070;
+}
+.carousel-dot.inactive {
+    width: 10px;
+    border-radius: 50%;
+    background: #4a2525;
+}

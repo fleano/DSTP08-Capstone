@@ -45,9 +45,12 @@ function CartPanel({ cart, user, isOpen, onToggle, onChangeQuantity, onRemove, o
 
         let response;
         try {
-            response = await fetch("/api/orders", {
+            response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": localStorage.getItem("token") || ""
+                },
                 body: JSON.stringify({ items: orderItems })
             });
         } catch (err) {
