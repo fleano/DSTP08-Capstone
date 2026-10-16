@@ -46,3 +46,6 @@ VALUES
 (1792090447, "Mr Jones Party"),
 (1792522447, "Supply delivery")
 ;
+INSERT INTO ShiftRole(name)
+VALUES
+("Server"),("Host"),("Cleaner"),("Cook"),("Cashier");
