@@ -29,6 +29,7 @@ const {
 const {
   initializeAnalyticsSchema,
 } = require("./4-analystics-dashboard/analytics_schema.js");
+const { initializeCouponSchema } = require("./2-menu-management/coupons.js");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -63,8 +64,9 @@ app.get("/health", (req, res) => {
 
 async function startServer() {
   try {
-    //await initializeStaffSchedulingSchema();
-    //await initializeAnalyticsSchema();
+    await initializeStaffSchedulingSchema();
+    await initializeAnalyticsSchema();
+    await initializeCouponSchema();
     app.listen(port, "0.0.0.0", () => {
       console.log(`Server running at http://localhost:${port}/`);
     });

@@ -22,9 +22,9 @@ VALUES (1, "Fried Chicken", "It's delicious", "1791950117656-stock-of-fried-chic
 
 INSERT OR IGNORE INTO FoodCart (accountID, foodID, costPrice, quantity)
 VALUES
-(0, 1, 750, 1),
 (1, 1, 750, 1),
-(2, 1, 325, 1)
+(2, 1, 750, 1),
+(3, 1, 325, 1)
 ;
 INSERT OR IGNORE INTO OrderHistory (orderID, accountID, orderDate)
 VALUES
