@@ -10,7 +10,7 @@ async function getUsersController(req, res, next) {
         const requesterRole = await Session.getRoleByToken(token);
 
         let sql = "SELECT id, username, email, roleID, firstName, lastName FROM Account";
-        
+
         // If requester is a Manager (role 1), hide Admin (role 0) accounts
         if (requesterRole === 1) {
             sql += " WHERE roleID != 0";
@@ -53,7 +53,7 @@ async function updateRoleController(req, res, next) {
             if (targetUser.roleID === 0) {
                 return res.status(403).json({ error: "Access denied. Managers cannot modify Admin accounts." });
             }
-            // Cannot promote anyone TO Admin
+            // Cannot promote anyone to Admin
             if (roleID === 0) {
                 return res.status(403).json({ error: "Access denied. Managers cannot assign Admin roles." });
             }

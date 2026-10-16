@@ -11,7 +11,7 @@ body {
     font-family: Georgia, serif;
     background-color: #2b0b13;
     background-image: linear-gradient(rgba(43, 11, 19, 0.85), rgba(20, 4, 8, 0.95)),
-                      url("/pictures/restaurant-bg-800.jpg");
+        url("/pictures/restaurant-bg-800.jpg");
     background-size: cover;
     background-position: center;
     padding: 1.5rem;
@@ -197,7 +197,7 @@ body {
 .hero-banner {
     height: 60vh;
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)),
-                url("/pictures/homepagenoodles.jpg") center/cover no-repeat;
+        url("/pictures/homepagenoodles.jpg") center/cover no-repeat;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -691,7 +691,209 @@ body {
 
 .old-price {
     text-decoration: line-through;
-    color: #888;          /* Muted color for the old price */
-    margin-right: 8px;    /* Space between old price and discounted price */
-    font-size: 0.9em;     /* Optional: slightly smaller */
+    color: #888;
+    /* Muted color for the old price */
+    margin-right: 8px;
+    /* Space between old price and discounted price */
+    font-size: 0.9em;
+    /* Optional: slightly smaller */
+}
+
+/* =====================================================
+   Admin pages (Manage Menu / Manage Accounts)
+   ===================================================== */
+
+.admin-page {
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 3rem 2rem;
+    background-color: #1a0f0f;
+    color: #fceade;
+    font-family: Arial, sans-serif;
+    text-align: left;
+    /* index.css centres #root, so reset here */
+}
+
+.admin-page-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.admin-page-inner.narrow {
+    max-width: 750px;
+}
+
+.admin-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.admin-topbar .back-button {
+    margin-bottom: 0;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-title {
+    margin: 0 0 0.5rem 0;
+    font-family: inherit;
+    font-size: 2.2rem;
+    font-weight: bold;
+    letter-spacing: normal;
+    color: #f7d070;
+}
+
+.admin-subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #cbbba8;
+}
+
+.admin-card {
+    background-color: #2b1717;
+    border: 1px solid #4a1f1f;
+    border-radius: 10px;
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.admin-empty {
+    color: #cbbba8;
+    margin-top: 2rem;
+}
+
+/* ---------- Form controls ---------- */
+.admin-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-label {
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #ebd9bd;
+}
+
+.admin-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    background-color: #1e0a10;
+    color: #fcf8f2;
+    border: 1px solid #8a7330;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: #d4af37;
+}
+
+.admin-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-select {
+    padding: 6px 8px;
+    background-color: #1e0a10;
+    color: #ebd9bd;
+    border: 1px solid #8a7330;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+.admin-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #ebd9bd;
+}
+
+/* ---------- Buttons (same look as checkout / guest / remove buttons) ---------- */
+.admin-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.admin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admin-btn-block {
+    width: 100%;
+}
+
+.admin-btn-primary {
+    background-color: #d4af37;
+    color: #2b0b13;
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+    background-color: #e6c55c;
+}
+
+.admin-btn-danger {
+    background-color: #e63946;
+    color: #fff;
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+    background-color: #c1121f;
+}
+
+.admin-btn-secondary {
+    background-color: transparent;
+    color: #d4af37;
+    border: 1px solid #d4af37;
+}
+
+.admin-btn-secondary:hover:not(:disabled) {
+    background-color: #d4af37;
+    color: #2b0b13;
+}
+
+.admin-btn-small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+/* ---------- Table ---------- */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #ebd9bd;
+    text-align: left;
+}
+
+.admin-table th {
+    padding: 10px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #f7d070;
+    border-bottom: 1px solid #8a7330;
+}
+
+.admin-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #4a1f1f;
+}
+
+.admin-table tbody tr:hover {
+    background-color: #3d2222;
 }
