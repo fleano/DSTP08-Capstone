@@ -12,6 +12,7 @@ import StaffSchedulePage from "./staff/staff-scheduling/pages/StaffSchedulePage.
 import { mockCategories, mockMenuItems } from "./mockMenuData.js";
 import { getFinalPrice } from "./priceHelper.js";
 import ManageAccounts from "./ManageAccounts.jsx";
+import ManageCoupons from "./ManageCoupons.jsx";
 import "./App.css";
 
 function App() {
@@ -145,9 +146,9 @@ function App() {
     }
 
     loadMenu();
-  }, [user]); // refetch on login / logout so coupon prices match the account
+  }, [user]);
 
-  // Re-price cart lines when the menu (and so the user's prices) changes
+
   useEffect(() => {
     const member = user !== null && !isGuest;
     setCart((prev) =>
@@ -156,7 +157,6 @@ function App() {
         return item ? { ...c, price: getFinalPrice(item, member) } : c;
       }),
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menuItems, user]);
 
   // ---------- Login / logout ----------
@@ -335,6 +335,13 @@ function App() {
                         Manage Schedule
                       </button>
 
+                      <button
+                        className="admin-bar-btn"
+                        onClick={() => navigate("/manage-coupons")}
+                      >
+                        Manage Coupons
+                      </button>
+
                       {/* Create Account: By both Admin and managers Only */}
                       {isManagerPlusRole(user.role) && (
                         <button
@@ -391,6 +398,20 @@ function App() {
           element={
             user && isManagerPlusRole(user.role) ? (
               <ManageAccounts onBack={() => navigate("/staff")} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/manage-coupons"
+          element={
+            user && isManagerPlusRole(user.role) ? (
+              <ManageCoupons
+                menuItems={menuItems}
+                onBack={() => navigate("/staff")}
+              />
             ) : (
               <Navigate to="/" />
             )
