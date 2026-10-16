@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS Food (
     enabled INTEGER DEFAULT 0, --affects display of item
     available INTEGER DEFAULT 0, --affects if item is sold out or not
     featured INTEGER DEFAULT 0, --affects if item is FEATURED on /featured
+    unitCost INTEGER, --analytics
     FOREIGN KEY (foodCategory) REFERENCES FoodCategory(id)
 );
 CREATE TABLE IF NOT EXISTS FoodCart (
@@ -103,3 +104,29 @@ BEGIN
     SET updatedAt = CURRENT_TIMESTAMP
     WHERE id = NEW.id;
 END;
+--analytics
+--ALTER TABLE Food ADD COLUMN unitCost INTEGER;
+CREATE TABLE IF NOT EXISTS SystemRequestMetric (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      requestAt INTEGER NOT NULL,
+      method TEXT NOT NULL,
+      route TEXT NOT NULL,
+      statusCode INTEGER NOT NULL,
+      durationMs INTEGER NOT NULL,
+      accountID INTEGER,
+      FOREIGN KEY (accountID) REFERENCES Account(id) ON DELETE SET NULL
+    );
+CREATE INDEX IF NOT EXISTS idx_SystemRequestMetric_requestAt
+    ON SystemRequestMetric (requestAt);
+
+CREATE INDEX IF NOT EXISTS idx_SystemRequestMetric_account_requestAt
+    ON SystemRequestMetric (accountID, requestAt);
+
+CREATE INDEX IF NOT EXISTS idx_OrderHistory_orderDate
+    ON OrderHistory (orderDate);
+
+CREATE INDEX IF NOT EXISTS idx_OrderHistoryItems_food_order
+    ON OrderHistoryItems (foodID, orderID);
+
+CREATE INDEX IF NOT EXISTS idx_OrderHistoryItems_order
+    ON OrderHistoryItems (orderID);

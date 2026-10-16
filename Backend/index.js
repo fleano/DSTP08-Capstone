@@ -63,8 +63,8 @@ app.get("/health", (req, res) => {
 
 async function startServer() {
   try {
-    await initializeStaffSchedulingSchema();
-    await initializeAnalyticsSchema();
+    //await initializeStaffSchedulingSchema();
+    //await initializeAnalyticsSchema();
     app.listen(port, "0.0.0.0", () => {
       console.log(`Server running at http://localhost:${port}/`);
     });
