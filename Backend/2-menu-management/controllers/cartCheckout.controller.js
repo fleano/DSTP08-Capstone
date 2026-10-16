@@ -26,7 +26,7 @@ async function cartCheckoutController(request, response, next) {
         });
       }
     }
-
+    console.log(accountID)
     const items = request.body.items;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -88,7 +88,8 @@ async function cartCheckoutController(request, response, next) {
         [orderID, food.id, costPrice, item.quantity],
       );
     }
-
+    //add a coupon for that food item if they have ordered at least 5 of that item total
+    addFoodCoupon(accountID);
     return response.status(201).json({
       message: "Checkout successful",
       orderID,
@@ -99,6 +100,57 @@ async function cartCheckoutController(request, response, next) {
     return response.status(500).json({
       error: "Checkout failed",
     });
+  }
+}
+async function addFoodCoupon(accountID) { //adds food coupons if they are eligible
+  const sql1 = `SELECT A.orderID, A.accountID, B.foodID, SUM(b.quantity) AS totalQuantity
+  FROM
+  OrderHistory AS A,
+  OrderHistoryItems AS B
+  JOIN
+  A.orderID = B.orderID
+  WHERE A.accountID = ?
+  GROUP BY B.foodID;`
+  console.log("accountID", accountID)
+  let result;
+  try {
+    result = await allQuery(sql1, [accountID])
+  }
+  catch {
+
+  }
+  console.log(result)
+  //for every food item determine a discount
+  for (row of result) {
+    let discountPercent
+    if (row.totalQuantity >= 15) {
+      discountPercent = 40;
+    }
+    else if (row.totalQuantity >= 10) {
+      discountPercent = 30;
+    }
+    else if (row.totalQuantity >= 5) {
+      discountPercent = 20;
+    }
+    else {
+      discountPercent = 0;
+    }
+    row.discountPercent = discountPercent;
+  }
+  let valuesParameter = []
+  for (row of result) {
+    if (row.discountPercent != 0) { //do not add if discount is zero
+      valuesParameter.push(`( ${row.accountID}, ${row.foodID}, ${row.discountPercent} )`)
+    }
+  }
+  valuesParameter.join(",");
+  const sql2 = `INSERT OR IGNORE INTO FoodCoupons (accountID, foodID, discountPercent)
+  VALUES ${valuesParameter};`
+  try {
+    await runQuery(sql2, [])
+  }
+  catch {
+
   }
 }
 
