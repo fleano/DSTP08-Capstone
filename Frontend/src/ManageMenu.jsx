@@ -24,121 +24,107 @@ function ManageMenu({
 
   if (loading) {
     return (
-      <div className="manage-menu-container">
+      <div className="admin-page">
         <p className="loading-text">Loading menu items...</p>
       </div>
     );
   }
 
   return (
-    <div className="manage-menu-container">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <button className="back-button" onClick={onBack}>
-          &larr; Back to dashboard
-        </button>
-        {!isCreatingNew && (
-          <button
-            className="admin-bar-btn"
-            style={{
-              background: "#4a2525",
-              color: "#f7d070",
-              padding: "8px 16px",
-              cursor: "pointer",
-              border: "1px solid #7a3535",
-              borderRadius: "4px",
-            }}
-            onClick={() => setIsCreatingNew(true)}
-          >
-            + Add New Dish
+    <div className="admin-page">
+      <div className="admin-page-inner narrow">
+        <div className="admin-topbar">
+          <button className="back-button" onClick={onBack}>
+            &larr; Back to dashboard
           </button>
-        )}
-      </div>
-      <div style={{ clear: "both" }} />
-
-      <div className="manage-menu-header">
-        <h2 className="manage-menu-title">
-          {isCreatingNew ? "➕ Add New Menu Item" : "🍽️ Manage Menu"}
-        </h2>
-        <p className="manage-menu-subtitle">
-          {isCreatingNew
-            ? "Fill out the details below to add a new dish to the menu."
-            : "Use the carousel arrows to switch dishes. Update details, toggle availability, change photos, or delete items."}
-        </p>
-      </div>
-
-      {isCreatingNew ? (
-        <ManageCarouselSlide
-          isNew={true}
-          categories={categories}
-          onCancel={() => setIsCreatingNew(false)}
-          onItemAdded={(newItem) => {
-            onItemAdded(newItem);
-            setIsCreatingNew(false);
-          }}
-        />
-      ) : menuItems.length === 0 ? (
-        <p style={{ marginTop: "2rem", color: "#ebd9bd" }}>
-          No menu items available to manage.
-        </p>
-      ) : (
-        <div className="carousel-card">
-          <div className="carousel-counter">
-            Item {currentIndex + 1} of {menuItems.length}
-          </div>
-
-          <div className="carousel-display-row">
+          {!isCreatingNew && (
             <button
-              className="carousel-arrow-btn"
-              onClick={() =>
-                setCurrentIndex((prev) =>
-                  prev === 0 ? menuItems.length - 1 : prev - 1,
-                )
-              }
+              className="admin-bar-btn"
+              onClick={() => setIsCreatingNew(true)}
             >
-              &#10094;
+              + Add New Dish
             </button>
+          )}
+        </div>
 
-            <div className="carousel-slide-content">
-              <ManageCarouselSlide
-                key={menuItems[currentIndex].id}
-                item={menuItems[currentIndex]}
-                categoryName={getCategoryName(menuItems[currentIndex])}
-                categories={categories}
-                onItemUpdated={onItemUpdated}
-                onItemDeleted={onItemDeleted}
-              />
+        <div className="admin-header">
+          <h2 className="admin-title">
+            {isCreatingNew ? "➕ Add New Menu Item" : "🍽️ Manage Menu"}
+          </h2>
+          <p className="admin-subtitle">
+            {isCreatingNew
+              ? "Fill out the details below to add a new dish to the menu."
+              : "Use the carousel arrows to switch dishes. Update details, toggle availability, change photos, or delete items."}
+          </p>
+        </div>
+
+        {isCreatingNew ? (
+          <div className="carousel-card">
+            <ManageCarouselSlide
+              isNew={true}
+              categories={categories}
+              onCancel={() => setIsCreatingNew(false)}
+              onItemAdded={(newItem) => {
+                onItemAdded(newItem);
+                setIsCreatingNew(false);
+              }}
+            />
+          </div>
+        ) : menuItems.length === 0 ? (
+          <p className="admin-empty">No menu items available to manage.</p>
+        ) : (
+          <div className="carousel-card">
+            <div className="carousel-counter">
+              Item {currentIndex + 1} of {menuItems.length}
             </div>
 
-            <button
-              className="carousel-arrow-btn"
-              onClick={() =>
-                setCurrentIndex((prev) =>
-                  prev >= menuItems.length - 1 ? 0 : prev + 1,
-                )
-              }
-            >
-              &#10095;
-            </button>
-          </div>
+            <div className="carousel-display-row">
+              <button
+                className="carousel-arrow-btn"
+                onClick={() =>
+                  setCurrentIndex((prev) =>
+                    prev === 0 ? menuItems.length - 1 : prev - 1,
+                  )
+                }
+              >
+                &#10094;
+              </button>
 
-          <div className="carousel-dots-container">
-            {menuItems.map((_, index) => (
-              <span
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`carousel-dot ${index === currentIndex ? "active" : "inactive"}`}
-              />
-            ))}
+              <div className="carousel-slide-content">
+                <ManageCarouselSlide
+                  key={menuItems[currentIndex].id}
+                  item={menuItems[currentIndex]}
+                  categoryName={getCategoryName(menuItems[currentIndex])}
+                  categories={categories}
+                  onItemUpdated={onItemUpdated}
+                  onItemDeleted={onItemDeleted}
+                />
+              </div>
+
+              <button
+                className="carousel-arrow-btn"
+                onClick={() =>
+                  setCurrentIndex((prev) =>
+                    prev >= menuItems.length - 1 ? 0 : prev + 1,
+                  )
+                }
+              >
+                &#10095;
+              </button>
+            </div>
+
+            <div className="carousel-dots-container">
+              {menuItems.map((_, index) => (
+                <span
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`carousel-dot ${index === currentIndex ? "active" : "inactive"}`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -362,58 +348,34 @@ function ManageCarouselSlide({
       )}
       {success && <div className="success-message">{success}</div>}
 
-      <div
-        className="edit-fields-grid"
-        style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}
-      >
-        <div className="field-group">
-          <label>Item Name</label>
+      <div className="edit-fields-grid">
+        <div className="admin-field">
+          <label className="admin-label">Item Name</label>
           <input
             type="text"
+            className="admin-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            style={{
-              width: "100%",
-              padding: "6px 10px",
-              background: "#2a1515",
-              border: "1px solid #4a2525",
-              color: "#f7d070",
-              borderRadius: "4px",
-            }}
           />
         </div>
 
-        <div className="field-group">
-          <label>Description</label>
+        <div className="admin-field">
+          <label className="admin-label">Description</label>
           <input
             type="text"
+            className="admin-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "6px 10px",
-              background: "#2a1515",
-              border: "1px solid #4a2525",
-              color: "#f7d070",
-              borderRadius: "4px",
-            }}
           />
         </div>
 
-        <div className="field-group">
-          <label>Category</label>
+        <div className="admin-field">
+          <label className="admin-label">Category</label>
           <select
+            className="admin-input"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "6px 10px",
-              background: "#2a1515",
-              border: "1px solid #4a2525",
-              color: "#f7d070",
-              borderRadius: "4px",
-            }}
           >
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
@@ -423,41 +385,38 @@ function ManageCarouselSlide({
           </select>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            gap: "1rem",
-          }}
-        >
-          <div className="field-group">
-            <label>Price ($)</label>
+        <div className="edit-price-row">
+          <div className="admin-field">
+            <label className="admin-label">Price ($)</label>
             <input
               type="number"
               step="0.01"
+              className="admin-input"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               required
             />
           </div>
 
-          <div className="field-group">
-            <label>Unit Cost ($)</label>
+          <div className="admin-field">
+            <label className="admin-label">Unit Cost ($)</label>
             <input
               type="number"
               min="0"
               step="0.01"
+              className="admin-input"
               value={unitCost}
               onChange={(e) => setUnitCost(e.target.value)}
               placeholder="Optional"
             />
           </div>
 
-          <div className="field-group">
-            <label>Discounted Price ($)</label>
+          <div className="admin-field">
+            <label className="admin-label">Discounted Price ($)</label>
             <input
               type="number"
               step="0.01"
+              className="admin-input"
               disabled={!isSpecial}
               placeholder={isSpecial ? "e.g., 6.00" : "Check Special Offer"}
               value={discountedPrice}
@@ -466,42 +425,31 @@ function ManageCarouselSlide({
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "2rem", marginTop: "0.5rem" }}>
-          <div className="field-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={available}
-                onChange={(e) => setAvailable(e.target.checked)}
-              />
-              Available
-            </label>
-          </div>
+        <div className="edit-checkbox-row">
+          <label className="admin-checkbox-label">
+            <input
+              type="checkbox"
+              checked={available}
+              onChange={(e) => setAvailable(e.target.checked)}
+            />
+            Available
+          </label>
 
-          <div className="field-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={isSpecial}
-                onChange={(e) => setIsSpecial(e.target.checked)}
-              />
-              Special Offer (Featured)
-            </label>
-          </div>
+          <label className="admin-checkbox-label">
+            <input
+              type="checkbox"
+              checked={isSpecial}
+              onChange={(e) => setIsSpecial(e.target.checked)}
+            />
+            Special Offer (Featured)
+          </label>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-          marginTop: "1rem",
-        }}
-      >
+      <div className="edit-actions">
         <button
           type="submit"
-          className="save-item-btn"
+          className="admin-btn admin-btn-primary admin-btn-block"
           disabled={saving || deleting}
         >
           {saving
@@ -516,16 +464,15 @@ function ManageCarouselSlide({
         {isNew ? (
           <button
             type="button"
-            className="delete-item-btn"
+            className="admin-btn admin-btn-secondary admin-btn-block"
             onClick={onCancel}
-            style={{ background: "#555" }}
           >
             Cancel
           </button>
         ) : (
           <button
             type="button"
-            className="delete-item-btn"
+            className="admin-btn admin-btn-danger admin-btn-block"
             onClick={handleDelete}
             disabled={saving || deleting}
           >

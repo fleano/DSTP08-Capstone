@@ -49,7 +49,7 @@ function ManageItemRow({ item, categoryName, onItemUpdated }) {
             return false;
         }
 
-        // Update the menu in App so customers see the change straight away
+        // updating the menu so the customer will see the changes right away
         onItemUpdated({ id: item.id, ...changes });
         return true;
     }
