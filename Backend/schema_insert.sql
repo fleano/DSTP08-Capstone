@@ -1,9 +1,9 @@
 --insert root admin
 -- user: root, password: rootmars
 INSERT INTO Account (username, email, passwordHash, roleID, firstName, lastName)
-VALUES ("root", "root@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 0, "admin", NULL);
-VALUES ("guest", "guest@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", -1, "guest", NULL);
-VALUES ("customer", "customer@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 3, "customer1", NULL);
+VALUES ("root", "root@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 0, "admin", NULL),
+("guest", "guest@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", -1, "guest", NULL),
+("customer", "customer@rootbeer.com", "$2b$10$TUmDP.pEmFyCt5WGQ5xDuev9e53FjEDZ4H7AsRW0.016OJi6mFLL2", 3, "customer1", NULL);
 
 INSERT INTO Role (id, name)
 VALUES (0, "Admin"), (-1, "Guest"), (1, "Manager"), (2, "Staff"), (3, "Customer");
@@ -22,15 +22,15 @@ VALUES ("Fried Chicken", "It's delicious", "1791950117656-stock-of-fried-chicken
 
 INSERT INTO FoodCart (accountID, foodID, costPrice, quantity)
 VALUES
-(0, 1, 750, 1),
 (1, 1, 750, 1),
-(2, 1, 325, 1)
+(2, 1, 750, 1),
+(3, 1, 325, 1)
 ;
 INSERT INTO OrderHistory (orderID, accountID, orderDate)
 VALUES
 (0, 1, 1792053499.507),
 (1, 1, 1792053499.507),
-(2, 2, 1792053499.507)
+(2, 3, 1792053499.507)
 ;
 INSERT INTO OrderHistoryItems(orderID, foodID, costPrice, quantity)
 VALUES
@@ -39,7 +39,7 @@ VALUES
 (2, 1, 750, 5)
 ;
 INSERT INTO FoodCoupons(accountID, foodID, discountPercent)
-VALUES (2, 1, 50);
+VALUES (3, 1, 50); -- customer (account id 3) gets 50% off food 1
 INSERT INTO Schedule(date, note)
 VALUES
 (1792004047, "Staff off day"),

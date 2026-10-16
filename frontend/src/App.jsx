@@ -106,9 +106,7 @@ function App() {
         const menuResponse = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/menu/account/all`,
           {
-            headers: {
-              Authorization: token,
-            },
+            headers: token ? { Authorization: token } : {},
           },
         );
 
@@ -147,7 +145,19 @@ function App() {
     }
 
     loadMenu();
-  }, []);
+  }, [user]); // refetch on login / logout so coupon prices match the account
+
+  // Re-price cart lines when the menu (and so the user's prices) changes
+  useEffect(() => {
+    const member = user !== null && !isGuest;
+    setCart((prev) =>
+      prev.map((c) => {
+        const item = menuItems.find((m) => m.id === c.id);
+        return item ? { ...c, price: getFinalPrice(item, member) } : c;
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuItems, user]);
 
   // ---------- Login / logout ----------
 
