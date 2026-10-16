@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Routes,
-  Route,
-  Navigate,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation, } from "react-router-dom";
 import Homepage from "./homepage.jsx";
 import MenuPage from "./MenuPage.jsx";
 import LoginPage from "./LoginPage.jsx";
@@ -121,10 +115,9 @@ function App() {
         if (menuResponse.ok) {
           const menuData = await menuResponse.json();
 
-          // Use your static category array for the filter buttons
           setCategories(mockCategories);
 
-          // Extract and normalize menu items from menuData.message
+          // Extract menu items from menuData.message
           const rawItems = menuData.message || [];
           const normalizedItems = rawItems.map((item) => ({
             ...item,

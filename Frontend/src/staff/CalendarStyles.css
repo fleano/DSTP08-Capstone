@@ -1,0 +1,133 @@
+.calendar-schedule {
+  text-align: left;
+  color: #ebd9bd;
+  font-family: Arial, sans-serif;
+}
+
+.calendar-schedule h2 {
+  color: #f7d070;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.calendar-schedule h3,
+.calendar-schedule h4 {
+  margin: 1rem 0 0.5rem;
+  color: #f7d070;
+}
+
+.calendar-schedule li {
+  color: #cbbba8;
+  list-style: none;
+  margin-bottom: 4px;
+}
+
+/* ---------- react-calendar overrides ---------- */
+.calendar-schedule .react-calendar {
+  width: 100%;
+  max-width: 420px;
+  background: #2b1717;
+  color: #ebd9bd;
+  border: 1px solid #8a7330;
+  border-radius: 10px;
+  font-family: inherit;
+  padding: 8px;
+}
+
+.calendar-schedule .react-calendar button {
+  color: #ebd9bd;
+  border-radius: 6px;
+}
+
+.calendar-schedule .react-calendar__navigation button {
+  color: #f7d070;
+  background: transparent;
+  font-weight: bold;
+}
+
+.calendar-schedule .react-calendar__navigation button:disabled {
+  background: transparent;
+  opacity: 0.4;
+}
+
+.calendar-schedule .react-calendar__navigation button:enabled:hover,
+.calendar-schedule .react-calendar__navigation button:enabled:focus,
+.calendar-schedule .react-calendar__tile:enabled:hover,
+.calendar-schedule .react-calendar__tile:enabled:focus {
+  background: #3d2222;
+}
+
+.calendar-schedule .react-calendar__month-view__weekdays {
+  color: #d4af37;
+}
+
+.calendar-schedule .react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+.calendar-schedule .react-calendar__month-view__days__day--neighboringMonth {
+  color: #8a7a6a;
+}
+
+.calendar-schedule .react-calendar__month-view__days__day--weekend {
+  color: #e63946;
+}
+
+.calendar-schedule .react-calendar__tile--now {
+  background: #3d2222;
+  border: 1px solid #8a7330;
+}
+
+.calendar-schedule .react-calendar__tile--active,
+.calendar-schedule .react-calendar__tile--active:enabled:hover,
+.calendar-schedule .react-calendar__tile--active:enabled:focus {
+  background: #d4af37;
+  color: #2b0b13;
+  font-weight: bold;
+}
+
+/* ---------- Note dialog ---------- */
+.calendar-schedule form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #1a0f0f;
+  border: 1px solid #4a1f1f;
+  border-radius: 8px;
+}
+
+.calendar-schedule textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  color: #fcf8f2;
+  background: #1e0a10;
+  border: 1px solid #8a7330;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.calendar-schedule textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+.calendar-schedule button[type="Submit"],
+.calendar-schedule button[type="submit"] {
+  align-self: flex-start;
+  padding: 10px 18px;
+  color: #2b0b13;
+  background: #d4af37;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.calendar-schedule button[type="submit"]:hover {
+  background: #e6c55c;
+}

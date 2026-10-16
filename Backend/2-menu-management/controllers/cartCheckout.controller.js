@@ -10,12 +10,6 @@ const {
 
 const { Session } = require("../../1-auth/sql_objects");
 
-/**
- * Cart checkout controller
- * @param {import('express').Request} request Incoming HTTP request.
- * @param {import('express').Response} response Outgoing HTTP response.
- * @param {import('express').NextFunction} next Passes control to the next middleware.
- */
 async function cartCheckoutController(request, response, next) {
   try {
     const token = request.get("Authorization");

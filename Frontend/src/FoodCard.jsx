@@ -3,9 +3,9 @@ import { getBadgeText } from "./priceHelper.js";
 import "./App.css";
 
 function FoodCard({ item, onOrder, isLoggedIn = true }) {
-    // Guard clause: if item is undefined or null, don't crash the app
+    // If item is undefined or null, don't crash the app
     if (!item) {
-        return null; 
+        return null;
     }
 
     // Items are available unless the backend says available: false

@@ -1,8 +1,3 @@
-/**
- * Upload file controller
- * @param {import('express').Request} request Incoming HTTP request.
- * @param {import('express').Response} response Outgoing HTTP response.
- */
 const { Food } = require("../food_objects");
 /*
 const uploadFileCheck = (req, res, next) => {

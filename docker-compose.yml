@@ -1,31 +1,45 @@
 services:
+  # Run the Express API; it is accessed by Nginx over the internal Compose network.
   backend:
+    # Build the API image from the backend Dockerfile.
     build: ./backend
-    ports:
-      - "3000:3000"
 
+    # Keep application data and uploaded images when the container is recreated.
     volumes:
       - ./backend/data:/app/data
       - ./backend/uploads:/app/uploads
 
+    # Allow the frontend's Nginx container to resolve this service by name.
     networks:
       - app-network
 
-    # restart: unless-stopped
+    # Restart the API automatically unless it was intentionally stopped.
+    restart: unless-stopped
 
+  # Build the Vite site, then serve its static output through Nginx.
   frontend:
-    build: ./frontend
-    ports:
-      - "5173:5173"
+    # Use the frontend Dockerfile and set API requests to use the same-origin Nginx proxy.
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
 
+    # Publish Nginx's HTTP port as port 80 on the host.
+    ports:
+      - "80:80"
+
+    # Start the backend service before starting the Nginx container.
     depends_on:
       - backend
 
+    # Join the network so Nginx can proxy requests to the backend service.
     networks:
       - app-network
 
-    # restart: unless-stopped
+    # Restart the web server automatically unless it was intentionally stopped.
+    restart: unless-stopped
 
+# Create a private bridge network for service-to-service communication.
 networks:
   app-network:
     driver: bridge
