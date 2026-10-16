@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS FoodCoupons( --if user orders 5 items in the history,
     FOREIGN KEY (accountID) REFERENCES Account(id),
     FOREIGN KEY (foodID) REFERENCES Food(id)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_coupon_unique ON FoodCoupons(accountID, foodID);
 CREATE TABLE IF NOT EXISTS Schedule(
     date INTEGER NOT NULL, --unix epoch
     note TEXT NOT NULL

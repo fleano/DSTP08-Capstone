@@ -9,6 +9,7 @@ const {
 } = require("../../1-auth/controllers/register.controller");
 
 const { Session } = require("../../1-auth/sql_objects");
+const { awardCoupons } = require("../coupons");
 
 async function cartCheckoutController(request, response, next) {
   try {
@@ -72,7 +73,21 @@ async function cartCheckoutController(request, response, next) {
         continue;
       }
 
-      const costPrice = food.discountedPrice ?? food.price;
+      // Prices are in cents. A customer coupon overrides Food.discountedPrice,
+      // matching getMenuController.
+      let costPrice = food.discountedPrice ?? food.price;
+
+      if (accountID > 0) {
+        const coupon = await getQuery(
+          `SELECT discountPercent FROM FoodCoupons WHERE accountID = ? AND foodID = ?`,
+          [accountID, food.id],
+        );
+        if (coupon && coupon.discountPercent > 0) {
+          costPrice = Math.round(
+            (food.price * (100 - coupon.discountPercent)) / 100,
+          );
+        }
+      }
 
       await runQuery(
         `
@@ -88,6 +103,9 @@ async function cartCheckoutController(request, response, next) {
         [orderID, food.id, costPrice, item.quantity],
       );
     }
+
+    // Grant any coupons this order has earned
+    await awardCoupons(accountID);
 
     return response.status(201).json({
       message: "Checkout successful",
