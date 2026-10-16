@@ -41,8 +41,8 @@ let db = new sqlite3.Database('./data/database.db', (err) => { //connect to data
         }
     }
 );*/
-console.log("db exists", dbExists);
-if (!dbExists) {
+//console.log("db exists", dbExists);
+if (true) {
   const initDatabaseScript = fs.readFileSync(
     path.join(__dirname, "..", "schema.sql"),
     { encoding: "utf8" },
